@@ -264,6 +264,7 @@ var NODES = [
   { id:"community-links", cluster:"ideas", src:"folder", title:"Surface what your community is saving", short:"Community links",
     sub:"Needs: a bookmarking or feed connector (Pinboard, RSS)",
     prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.",
+    note:"Pinboard and most feeds arrive as custom connectors; the how-to lives under What you can connect.",
     rel:"Bookmarks are a quiet signal: what the people around you find worth keeping. Point this at a shared tag or feed and the community's reading becomes a picture you can talk about together." },
 
   // ===== Go deeper =====
@@ -285,12 +286,6 @@ var NODES = [
     sub:"TechCrunch · July 2025", href:"https://techcrunch.com/2025/07/19/for-privacy-and-security-think-twice-before-granting-ai-access-to-your-personal-data/", linkLabel:"Read it before you connect &rarr;",
     rel:"Connecting an app can hand over years of email and contacts in one click, often more than the feature needs. Read the permission screen. This is the article to read before your first connection, not after." },
 
-  { id:"day-to-day", cluster:"deeper", src:"web", title:"What this looks like day to day", short:"A day with it",
-    sub:"TechCrunch · April 2025", href:"https://techcrunch.com/2025/04/15/anthropics-claude-now-read-your-gmail/", linkLabel:"Read the story &rarr;",
-    rel:"A mainstream look at Claude reading Gmail and Calendar: personalized help without re-uploading files or writing long prompts. Useful for calibrating what a connected assistant can do in practice." },
-  { id:"field-report", cluster:"deeper", src:"web", title:"An honest field report", short:"Field report",
-    sub:"Harper Reed's blog · December 2025", href:"https://harper.blog/2025/12/03/claude-code-email-productivity-mcp-agents/", linkLabel:"Read the field report &rarr;",
-    rel:"A first-person account of letting an assistant triage email and draft replies, including the part where it sent a draft early and committed him to a book deal. The lesson holds: review before anything sends." },
 
   // ===== Additional resources =====
   { id:"cls", cluster:"resources", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
@@ -320,7 +315,8 @@ var EXTRA_LINKS = [
   ["prompt","keep"],
   ["privacy","connect-app"],
   ["share","privacy"],
-  ["refresh","collaborators"]
+  ["refresh","collaborators"],
+  ["community-links","custom"]
 ];
 
 /* ============================================================================
