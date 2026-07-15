@@ -70,6 +70,8 @@
     color:var(--paper); border:none; border-radius:7px; padding:6px 12px; cursor:pointer; letter-spacing:0; text-transform:none }
   .pp-text{ margin:0; padding:12px; font-family:ui-monospace,Consolas,Menlo,monospace; font-size:12.5px; line-height:1.6;
     white-space:pre-wrap; word-break:break-word; color:var(--ink) }
+  .pp-fill{ color:var(--accent-deep); background:rgba(60,90,58,0.12); border:1px solid rgba(60,90,58,0.25);
+    border-radius:5px; padding:0 4px; font-weight:700 }
   .p-note{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px; color:var(--ink-faint); margin:16px 0 0 }
   .p-related{ margin:16px 0 0 }
   .p-related .rh{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; letter-spacing:.08em;
@@ -263,12 +265,6 @@ var NODES = [
     sub:"Needs: a bookmarking or feed connector (Pinboard, RSS)",
     prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.",
     rel:"Bookmarks are a quiet signal: what the people around you find worth keeping. Point this at a shared tag or feed and the community's reading becomes a picture you can talk about together." },
-  { id:"day-to-day", cluster:"ideas", src:"web", title:"What this looks like day to day", short:"A day with it",
-    sub:"TechCrunch · April 2025", href:"https://techcrunch.com/2025/04/15/anthropics-claude-now-read-your-gmail/", linkLabel:"Read the story &rarr;",
-    rel:"A mainstream look at Claude reading Gmail and Calendar: personalized help without re-uploading files or writing long prompts. Useful for calibrating what a connected assistant can do in practice." },
-  { id:"field-report", cluster:"ideas", src:"web", title:"An honest field report", short:"Field report",
-    sub:"Harper Reed's blog · December 2025", href:"https://harper.blog/2025/12/03/claude-code-email-productivity-mcp-agents/", linkLabel:"Read the field report &rarr;",
-    rel:"A first-person account of letting an assistant triage email and draft replies, including the part where it sent a draft early and committed him to a book deal. The lesson holds: review before anything sends." },
 
   // ===== Go deeper =====
   { id:"restyle", cluster:"deeper", src:"folder", title:"Make the map look like you", short:"Restyle it",
@@ -288,6 +284,13 @@ var NODES = [
   { id:"privacy", cluster:"deeper", src:"web", title:"Think before you click Allow", short:"Privacy first",
     sub:"TechCrunch · July 2025", href:"https://techcrunch.com/2025/07/19/for-privacy-and-security-think-twice-before-granting-ai-access-to-your-personal-data/", linkLabel:"Read it before you connect &rarr;",
     rel:"Connecting an app can hand over years of email and contacts in one click, often more than the feature needs. Read the permission screen. This is the article to read before your first connection, not after." },
+
+  { id:"day-to-day", cluster:"deeper", src:"web", title:"What this looks like day to day", short:"A day with it",
+    sub:"TechCrunch · April 2025", href:"https://techcrunch.com/2025/04/15/anthropics-claude-now-read-your-gmail/", linkLabel:"Read the story &rarr;",
+    rel:"A mainstream look at Claude reading Gmail and Calendar: personalized help without re-uploading files or writing long prompts. Useful for calibrating what a connected assistant can do in practice." },
+  { id:"field-report", cluster:"deeper", src:"web", title:"An honest field report", short:"Field report",
+    sub:"Harper Reed's blog · December 2025", href:"https://harper.blog/2025/12/03/claude-code-email-productivity-mcp-agents/", linkLabel:"Read the field report &rarr;",
+    rel:"A first-person account of letting an assistant triage email and draft replies, including the part where it sent a draft early and committed him to a book deal. The lesson holds: review before anything sends." },
 
   // ===== Additional resources =====
   { id:"cls", cluster:"resources", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
@@ -445,7 +448,7 @@ function renderPanel(d){
   var sibs = NODES.filter(function(n){ return n.cluster===d.cluster && n.id!==d.id; });
   var relatedHtml = sibs.length ? '<div class="p-related"><p class="rh">Same group ('+sibs.length+')</p><ul>'+sibs.map(function(s){ return '<li data-id="'+s.id+'">'+shapeSVG(clusterShape(s.cluster),C(s.cluster))+esc(s.short||s.title)+'</li>'; }).join("")+'</ul></div>' : "";
   var srcBadge = (HAS_SOURCES && d.src && SOURCES[d.src]) ? '<span class="p-src-badge">'+esc(SOURCES[d.src].label)+'</span>' : "";
-  var promptHtml = d.prompt ? '<div class="p-prompt"><p class="pp-head"><span>Copy this prompt &middot; yours to edit</span><button type="button" class="p-copy" style="background:'+color+'">Copy prompt</button></p><pre class="pp-text">'+esc(d.prompt)+'</pre></div>' : "";
+  var promptHtml = d.prompt ? '<div class="p-prompt"><p class="pp-head"><span>Copy this prompt &middot; yours to edit</span><button type="button" class="p-copy" style="background:'+color+'">Copy prompt</button></p><pre class="pp-text">'+esc(d.prompt).replace(/\[([^\]]+)\]/g,'<span class="pp-fill">[$1]</span>')+'</pre></div>' : "";
   detailEl.innerHTML =
     '<p class="p-kicker" style="color:'+color+'">'+esc(CLUSTERS[d.cluster].label)+'</p>'+
     '<h2 class="p-title">'+esc(d.title)+'</h2>'+
