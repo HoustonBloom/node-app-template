@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Node App Template</title>
+<style>
+  :root{
+    --paper:#f6f1e6; --paper-deep:#efe7d3; --map:#f4efe4; --ink:#1c1813; --ink-soft:#524b40;
+    --ink-faint:#6e6659; --rule:#d6cdb8; --accent:#3c5a3a; --accent-deep:#2f4a2e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{ background:var(--paper); color:var(--ink); font-family:Georgia,'Times New Roman',serif; line-height:1.55; }
+  .ui{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif }
+  .shell{ max-width:1180px; margin:0 auto; padding:22px 18px 40px }
+  header.top{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px;
+    border-bottom:2px solid var(--ink); padding-bottom:16px }
+  .masthead .kicker{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--accent); font-weight:700; margin:0 0 6px }
+  h1{ font-size:27px; line-height:1.15; margin:0 0 6px; font-weight:700 }
+  .sub{ margin:0; color:var(--ink-soft); font-size:15px; max-width:56ch }
+
+  .filters{ margin:16px 0 14px; display:flex; flex-direction:column; gap:9px }
+  .filter-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+  .frow-label{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:10.5px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-faint); font-weight:700; min-width:52px }
+  nav.chips{ display:flex; flex-wrap:wrap; gap:8px }
+  .chip{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; display:inline-flex; align-items:center; gap:7px;
+    font-size:12.5px; font-weight:600; color:var(--ink-soft); background:var(--paper-deep); border:1px solid var(--rule);
+    border-radius:999px; padding:6px 12px; cursor:pointer }
+  .chip[aria-pressed="true"]{ background:var(--ink); color:var(--paper); border-color:var(--ink) }
+  .chip.src[aria-pressed="true"]{ background:var(--accent-deep); border-color:var(--accent-deep); color:var(--paper) }
+  .chip .dot{ width:9px; height:9px; border-radius:50% }
+  .glyph{ flex:0 0 11px; display:inline-block }
+  .chip small{ opacity:.7; font-weight:700 }
+  .legend-note{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; color:var(--ink-faint) }
+  .p-src-badge{ display:inline-block; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:.04em; padding:3px 9px; border-radius:999px; margin:10px 0 0; background:var(--paper); color:var(--ink-soft);
+    border:1px solid var(--rule) }
+
+  .grid{ display:grid; grid-template-columns:1fr 380px; gap:16px; height:min(74vh,700px) }
+  .map-wrap{ position:relative; background:var(--map); border:1px solid var(--rule); border-radius:14px; overflow:hidden }
+  canvas{ width:100%; height:100%; display:block; touch-action:none; cursor:grab }
+  .zoom{ position:absolute; right:12px; bottom:40px; display:flex; flex-direction:column; gap:6px }
+  .zoom button{ width:34px; height:34px; border-radius:8px; border:1px solid var(--rule); background:var(--paper);
+    color:var(--ink); font-size:17px; cursor:pointer; line-height:1 }
+  .zoom button:hover{ background:var(--paper-deep) }
+  .hint{ position:absolute; left:12px; bottom:12px; margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11.5px; color:var(--ink-faint); background:rgba(246,241,230,.72); padding:4px 8px; border-radius:6px }
+
+  .panel{ overflow:auto; background:var(--paper-deep); border:1px solid var(--rule); border-radius:14px; padding:20px 20px 26px }
+  .p-kicker{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; letter-spacing:.1em;
+    text-transform:uppercase; font-weight:700; margin:0 0 8px }
+  .p-title{ font-size:22px; line-height:1.2; margin:0 0 8px; font-weight:700 }
+  .p-source{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px; color:var(--ink-faint); margin:0 }
+  .p-divider{ height:1px; background:var(--rule); margin:16px 0 }
+  .p-lead{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; letter-spacing:.08em;
+    text-transform:uppercase; font-weight:700; color:var(--accent); margin:0 0 8px }
+  .p-rel{ font-size:16px; line-height:1.55; margin:0 0 18px }
+  .p-btn{ display:inline-block; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:13.5px; font-weight:700;
+    text-decoration:none; color:var(--paper); padding:11px 16px; border-radius:9px; margin:0 6px 8px 0 }
+  .p-btn.ghost{ background:transparent; color:var(--accent-deep); border:1px solid var(--accent-deep) }
+  .p-prompt{ margin:0 0 18px; border:1px solid var(--rule); border-radius:10px; background:var(--paper); overflow:hidden }
+  .pp-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0; padding:7px 8px 7px 12px;
+    border-bottom:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--ink-faint) }
+  .p-copy{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px; font-weight:700;
+    color:var(--paper); border:none; border-radius:7px; padding:6px 12px; cursor:pointer; letter-spacing:0; text-transform:none }
+  .pp-text{ margin:0; padding:12px; font-family:ui-monospace,Consolas,Menlo,monospace; font-size:12.5px; line-height:1.6;
+    white-space:pre-wrap; word-break:break-word; color:var(--ink) }
+  .p-note{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px; color:var(--ink-faint); margin:16px 0 0 }
+  .p-related{ margin:16px 0 0 }
+  .p-related .rh{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; letter-spacing:.08em;
+    text-transform:uppercase; font-weight:700; color:var(--ink-faint); margin:0 0 8px }
+  .p-related ul{ list-style:none; margin:0; padding:0 }
+  .p-related li{ display:flex; align-items:center; gap:8px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    font-size:13px; color:var(--ink-soft); padding:5px 0; cursor:pointer; border-top:1px solid var(--rule) }
+  .p-related li:first-child{ border-top:none }
+  .p-related li:hover{ color:var(--ink) }
+  .p-related .rdot{ width:9px; height:9px; border-radius:50%; flex:0 0 9px }
+
+  @media (max-width:820px){
+    h1{ font-size:23px }
+    .grid{ grid-template-columns:1fr; height:auto }
+    .map-wrap{ height:54vh }
+    .panel{ max-height:none }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="masthead">
+      <p class="kicker ui" id="kicker"></p>
+      <h1 id="title"></h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+  </header>
+
+  <div class="filters ui">
+    <div class="filter-row" id="srcRow" style="display:none">
+      <span class="frow-label">Source</span>
+      <nav class="chips" id="srcChips" aria-label="Filter by source"></nav>
+      <span class="legend-note" id="srcLegend"></span>
+    </div>
+    <div class="filter-row">
+      <span class="frow-label">Group</span>
+      <nav class="chips" id="chips" aria-label="Filter by group"></nav>
+    </div>
+  </div>
+
+  <main class="grid">
+    <section class="map-wrap">
+      <canvas id="map" aria-label="Node map"></canvas>
+      <div class="zoom" role="group" aria-label="Zoom">
+        <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+        <button id="zoomOut" type="button" aria-label="Zoom out">&minus;</button>
+        <button id="zoomReset" type="button" aria-label="Reset view">&#9711;</button>
+      </div>
+      <p class="hint ui" id="hint">Drag to move &middot; scroll to zoom &middot; tap a dot</p>
+    </section>
+
+    <aside class="panel" id="panel">
+      <div class="detail" id="detail"></div>
+    </aside>
+  </main>
+</div>
+
+<script>
+/* ============================================================================
+   SECTION 1 · YOUR CONTENT. This is the only section to edit.
+   An agent populating this template replaces everything between here and the
+   "SECTION 2 · ENGINE" marker. Field-by-field instructions live in
+   AGENT-INSTRUCTIONS.md, which ships alongside this file.
+   Everything below is PLACEHOLDER content: no real data ships in this file.
+   ========================================================================= */
+
+// Page framing. Shown in the header and the resting panel.
+// The content shipped below is the template's own getting-started guide. When an
+// agent builds a person's map, it copies this file and replaces this whole section.
+// The original file keeps this guide, permanently.
+var CONFIG = {
+  kicker:   "Node app template · start here",
+  title:    "Using this template for your own work",
+  subtitle: "Every dot teaches one piece of getting set up: tap it, read the panel, follow the link. When you are ready, hand your assistant this folder and ask for a map of your own.",
+  relLabel: "What to know",            // heading above each node's explanation
+  linkLabel:"Open &rarr;",             // default button text when a node has a link
+  // Public home of this template. The "Get the template" node's button uses it.
+  templateRepo: "https://github.com/HoustonBloom/node-app-template"
+};
+
+// Groups. "anchor" is required and is the hub at the center.
+// Every other key is a filter chip. Give every group a distinct color AND a
+// distinct shape: circle, square, triangle, diamond, hexagon, or star. The
+// shape is drawn on the map and in the chips, so color-blind readers can
+// still tell groups apart. Never encode a group in color alone.
+var CLUSTERS = {
+  anchor:   { label:"Start here",                color:"#38322a" },
+  setup:    { label:"Get set up",                color:"#3f8f5e", shape:"circle" },
+  connect:  { label:"What you can connect",      color:"#4a5fc7", shape:"square" },
+  firstmap: { label:"Make your first map",       color:"#c8902f", shape:"triangle" },
+  ideas:    { label:"Use cases to steal",        color:"#8a5aa8", shape:"diamond" },
+  deeper:   { label:"Go deeper",                 color:"#b0642f", shape:"hexagon" },
+  resources:{ label:"Additional resources",      color:"#9a3b52", shape:"star" }
+};
+// Draw order of the sectors around the hub. List every cluster key except anchor.
+var ORDER = ["setup","connect","firstmap","ideas","deeper","resources"];
+
+// Data sources: an optional SECOND filter axis, independent of the groups above.
+// Use it when nodes come from more than one place (two different apps, or an app
+// plus the web). Each node then carries src:"key". Give a source a ring style
+// ("solid", "dashed", or "dotted") and its dots wear that outline on the map;
+// a source with no ring renders as a plain dot. Use at most one ring style per
+// source and keep them visually distinct. Leave SOURCES empty ({}) and the
+// source filter row hides itself.
+var SOURCES = {
+  folder:   { label:"In this folder" },
+  official: { label:"Official docs", ring:"solid" },
+  web:      { label:"Around the web", ring:"dotted" }
+};
+// One short line explaining the ring styles, shown next to the source chips.
+var SOURCE_LEGEND = "plain dot = in this folder · solid ring = official docs · dotted ring = around the web";
+
+// Nodes. Exactly one node must have cluster:"anchor". Fields:
+//   id       unique short string
+//   cluster  one of the CLUSTERS keys
+//   title    full name, shown in the panel
+//   short    1-3 word label drawn on the map (falls back to title)
+//   sub      small line under the panel title: where it came from, author, date
+//   rel      one or two sentences: why this node is on this map
+//   href     optional link the panel button opens
+//   linkLabel optional button text for this node (falls back to CONFIG.linkLabel)
+//   note     optional small print at the bottom of the panel
+var NODES = [
+  { id:"hub", cluster:"anchor", title:"Using this template for your own work", short:"Start here",
+    sub:"Every link on this map checked July 14, 2026",
+    href:"README.md", linkLabel:"Open the README &rarr;",
+    rel:"You are looking at the guide. Every dot on this map teaches one piece of getting set up: the AI app to download, what you can connect, prompts worth stealing. Read what interests you, then ask your assistant for a map of your own." },
+
+  // ===== Get set up =====
+  { id:"download", cluster:"setup", src:"official", title:"Download an AI desktop app", short:"1 · Get an AI app",
+    sub:"Claude or ChatGPT · your pick", href:"https://claude.com/download", linkLabel:"Download Claude &rarr;",
+    links:[{label:"Download ChatGPT &rarr;", href:"https://chatgpt.com/download/"}],
+    note:"Both downloads are free. Finishing a map is where plans matter: Claude needs a paid plan to write the map file (Cowork or Claude Code, Pro and up); ChatGPT needs one to connect Google apps.",
+    rel:"This template runs on whichever AI assistant you already use. Step one is having that assistant on your desktop, where it can reach your files. The buttons below go to the official downloads, both free." },
+  { id:"connect-app", cluster:"setup", src:"official", title:"Connect your apps", short:"2 · Connect apps",
+    sub:"Official help centers · Claude and ChatGPT", href:"https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities", linkLabel:"Connect apps in Claude &rarr;",
+    links:[{label:"Connect apps in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/11487775-connectors-in-chatgpt"}],
+    note:"Before your first connection, read the privacy dot under Go deeper.",
+    rel:"In your assistant's settings, find connectors (ChatGPT calls them apps) and pick an app you already use. Once your assistant can see your bookmarks or your Drive, it has something real to map." },
+  { id:"get-template", cluster:"setup", src:"web", title:"Get your own copy of this template", short:"3 · Get the template",
+    sub:"GitHub · one folder, three files", href:CONFIG.templateRepo, linkLabel:"Get the template on GitHub &rarr;",
+    rel:"Everything lives in one folder: this template, the instructions your assistant reads, and a README. If someone showed you this map and you want your own, download the folder, keep it, and build every map from your copy." },
+  { id:"give-folder", cluster:"setup", src:"folder", title:"Hand your assistant this folder", short:"4 · Share this folder",
+    sub:"The handoff that makes it work",
+    rel:"Your assistant needs two things: this folder and a question. In Claude, open Cowork and choose this folder when it asks where to work; in ChatGPT's desktop app, start a Codex session and pick it. Every prompt on this map starts by telling the assistant to read AGENT-INSTRUCTIONS.md, and from there it knows which part of the template to fill in. You never touch the code." },
+
+  // ===== What you can connect =====
+  { id:"directory", cluster:"connect", src:"official", title:"Browse the connectors directory", short:"App directory",
+    sub:"claude.com/connectors · chatgpt.com/apps", href:"https://claude.com/connectors", linkLabel:"Browse Claude's gallery &rarr;",
+    links:[{label:"Browse ChatGPT's apps &rarr;", href:"https://chatgpt.com/apps"}],
+    rel:"A large and growing set, browsable by what you want to do. If you use an app for work or life, look for it here: project boards, notes, mail, music. Claude and ChatGPT each keep their own gallery." },
+  { id:"gworkspace", cluster:"connect", src:"official", title:"Gmail, Google Drive, and Calendar", short:"Google apps",
+    sub:"Official help centers · step by step", href:"https://support.claude.com/en/articles/10166901-use-google-workspace-connectors", linkLabel:"Steps for Claude &rarr;",
+    links:[{label:"Steps for ChatGPT &rarr;", href:"https://help.openai.com/en/articles/10408842-google-app-for-chatgpt-data-controls-faq"}],
+    note:"Claude's Google connectors work on the free plan. ChatGPT's ship on paid plans.",
+    rel:"The most common starting point. Each guide walks through connecting Gmail, Drive, and Calendar, and says plainly what your assistant can and cannot see once you do." },
+  { id:"custom", cluster:"connect", src:"official", title:"Custom connectors, when you outgrow the directory", short:"Custom connectors",
+    sub:"Official help centers · power users", href:"https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp", linkLabel:"The how-to for Claude &rarr;",
+    links:[{label:"The how-to for ChatGPT &rarr;", href:"https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt"}],
+    note:"In ChatGPT this lives behind developer mode on paid plans. Claude's free plan allows one custom connector.",
+    rel:"Anything with a remote MCP server can plug in, even tools the directory does not list (MCP is the standard plug, explained under Go deeper). Skip this on day one. It is here so you know the ceiling is high." },
+
+  // ===== Make your first map =====
+  { id:"question", cluster:"firstmap", src:"folder", title:"Pick one question", short:"One question",
+    sub:"The step people skip",
+    rel:"Not \"map my Drive.\" Something with a point of view: which of my saved links would help me start a business? A map drawn around one question is interesting. A map of everything is noise." },
+  { id:"prompt", cluster:"firstmap", src:"folder", title:"The prompt that builds it", short:"The prompt",
+    sub:"Copy it below · fill in the brackets",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then look through my [app] and build me a version of node-app-template.html that answers this question: [my question]. Save it as a new file in this folder, named after the question. Leave node-app-template.html untouched.",
+    rel:"Fill in the two brackets, paste it to your assistant, and you get a map. The last sentence keeps this template whole no matter how many maps you build." },
+  { id:"keep", cluster:"firstmap", src:"folder", title:"Keep this template forever", short:"Keep the template",
+    sub:"Copy, never overwrite",
+    rel:"Your assistant builds every new map as a new file and leaves node-app-template.html alone. If a map ever goes wrong, delete it and build another from the clean copy." },
+
+  // ===== Use cases to steal =====
+  { id:"research", cluster:"ideas", src:"folder", title:"Map a research pile", short:"Research map",
+    sub:"Works with Drive, Notion, folders",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my [Drive folder, Notion space, or local folder] for [project] and build me a version of node-app-template.html answering: what have I already collected about [topic], and how does it connect? Group items by theme, link every node back to its source document, and save the map as a new file in this folder. Leave node-app-template.html untouched.",
+    rel:"Point it at the folder where a project's reading has been piling up and ask what you already have and how it connects. The gaps become obvious once it is drawn." },
+  { id:"people", cluster:"ideas", src:"folder", title:"Map the people around a project", short:"People map",
+    sub:"Works with email and calendar",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then look through my email and calendar around [project or event] and build me a version of node-app-template.html mapping the people and organizations involved, grouped by how they are involved. Include only people I would be comfortable showing on a shared screen. Save the map as a new file in this folder. Leave node-app-template.html untouched.",
+    rel:"Who is involved in the fundraiser, grouped by how they are involved, each dot linked to the last thread. The consent line is part of the prompt on purpose: keep it." },
+  { id:"links", cluster:"ideas", src:"folder", title:"Map your saved links", short:"Bookmarks map",
+    sub:"Works when your bookmarks app has a connector",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my saved bookmarks and build me a version of node-app-template.html answering: which of my saved links would help me [goal]? Group them by what stage they help with, link every node to its bookmark, and save the map as a new file in this folder. Leave node-app-template.html untouched.",
+    rel:"Everything you saved about one topic, finally in one view. The map shows which saves still matter, and the leftover clutter gets easier to let go of." },
+  { id:"my-work", cluster:"ideas", src:"folder", title:"How does this connect to my work?", short:"My work map",
+    sub:"Works with any connected app",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. First ask me to describe my work in a few sentences, and make that the hub. Then go through my [app] and build me a version of node-app-template.html answering: how does what I have saved connect to my work? Group items by the part of my work they touch, write each node's explanation as the specific connection, and link every node to its source. Save the map as a new file in this folder. Leave node-app-template.html untouched.",
+    rel:"The anchor does not have to be a question. Make it your work: your project, practice, or program, described in a few sentences. Then everything you have saved gets read against it, and each dot answers one thing: what this has to do with what you are building." },
+  { id:"day-to-day", cluster:"ideas", src:"web", title:"What this looks like day to day", short:"A day with it",
+    sub:"TechCrunch · April 2025", href:"https://techcrunch.com/2025/04/15/anthropics-claude-now-read-your-gmail/", linkLabel:"Read the story &rarr;",
+    rel:"A mainstream look at Claude reading Gmail and Calendar: personalized help without re-uploading files or writing long prompts. Useful for calibrating what a connected assistant can do in practice." },
+  { id:"field-report", cluster:"ideas", src:"web", title:"An honest field report", short:"Field report",
+    sub:"Harper Reed's blog · December 2025", href:"https://harper.blog/2025/12/03/claude-code-email-productivity-mcp-agents/", linkLabel:"Read the field report &rarr;",
+    rel:"A first-person account of letting an assistant triage email and draft replies, including the part where it sent a draft early and committed him to a book deal. The lesson holds: review before anything sends." },
+
+  // ===== Go deeper =====
+  { id:"mcp-official", cluster:"deeper", src:"official", title:"MCP, the plug underneath all this", short:"What is MCP",
+    sub:"modelcontextprotocol.io", href:"https://modelcontextprotocol.io/", linkLabel:"Read the official intro &rarr;",
+    rel:"The protocol that lets assistants talk to apps, explained by the people who maintain it. The USB-C analogy is theirs, and it is the right one: one port, many devices." },
+  { id:"mcp-plain", cluster:"deeper", src:"web", title:"MCP in plain English", short:"MCP, plainly",
+    sub:"Zapier · updated June 2026", href:"https://zapier.com/blog/mcp/", linkLabel:"Read the explainer &rarr;",
+    rel:"The friendliest version of the story: why an assistant with a standard plug can see your apps and act in them, instead of answering from memory alone." },
+  { id:"why-maps", cluster:"deeper", src:"web", title:"Why a map beats a list", short:"Why maps work",
+    sub:"Eric J. Ma's blog · December 2020", href:"https://ericmjl.github.io/blog/2020/12/15/building-a-personal-knowledge-graph-on-obsidian/", linkLabel:"Read the essay &rarr;",
+    rel:"Written about linked note-taking, but the argument is this template's argument: a graph externalizes how things relate in your head, and the surprising connections show up in the picture, not the list." },
+  { id:"privacy", cluster:"deeper", src:"web", title:"Think before you click Allow", short:"Privacy first",
+    sub:"TechCrunch · July 2025", href:"https://techcrunch.com/2025/07/19/for-privacy-and-security-think-twice-before-granting-ai-access-to-your-personal-data/", linkLabel:"Read it before you connect &rarr;",
+    rel:"Connecting an app can hand over years of email and contacts in one click, often more than the feature needs. Read the permission screen. This is the article to read before your first connection, not after." },
+  { id:"failure-modes", cluster:"deeper", src:"web", title:"The failure modes, honestly", short:"Failure modes",
+    sub:"MIT Technology Review · February 2026", href:"https://www.technologyreview.com/2026/02/11/1132768/is-a-secure-ai-assistant-possible/", linkLabel:"See the failure modes &rarr;",
+    note:"MIT Technology Review meters some articles; this one loaded free when checked.",
+    rel:"Two ways a connected assistant goes wrong: honest mistakes, and prompt injection, where a malicious page hijacks its instructions. Worth knowing both before you trust one with your inbox." },
+
+  // ===== Additional resources =====
+  { id:"cls", cluster:"resources", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
+    sub:"Megan Ducote · two open-access papers",
+    links:[
+      {label:"Read the Dual-Ledger paper &rarr;", href:"https://doi.org/10.6084/m9.figshare.32576631"},
+      {label:"Read the Local Assembly paper &rarr;", href:"https://doi.org/10.6084/m9.figshare.32772147"},
+      {label:"Visit Houston Bloom &rarr;", href:"https://github.com/HoustonBloom/houstonbloom"}
+    ],
+    rel:"The idea this template is a small piece of: cultivate your own local data, become legible to yourself first, then share with your community on your own terms. The spec describes how neighbors and groups recognize each other without a platform in the middle. Two published papers carry it, and Houston Bloom is the field program building it in practice." },
+  { id:"compass", cluster:"resources", src:"web", title:"Critical Compass, from the Compass Suite", short:"Critical Compass",
+    sub:"Compass Suite · Jonathan Kyle Hobson · free, open beta",
+    href:"https://jonathankhobson.github.io/compass-suite/", linkLabel:"Explore the Compass tools &rarr;",
+    note:"Code AGPL-3.0; docs, prompts, and skills CC BY-SA 4.0.",
+    rel:"A critical-thinking assistant that pressure-tests claims before they travel: evidence gaps, hidden assumptions, framing risks, missing voices. Once your maps start making claims about your own data, this is the tool to run them past." },
+  { id:"cibc", cluster:"resources", src:"web", title:"Citizen Infrastructure Builders Club", short:"CIBC",
+    sub:"Citizen-Infra on GitHub · open source",
+    href:"https://github.com/Citizen-Infra", linkLabel:"See what the club builds &rarr;",
+    rel:"Citizen infrastructure is what a community owns rather than rents: scheduling, deliberation, neighborhood dashboards, the connective tools neighbors run for themselves. The club builds them together, for and with communities, starting from what people need instead of a product roadmap. More than a dozen public projects at last count, all free to copy and adapt: in the club's own words, tools that teach collective action through use." }
+];
+
+// Optional cross-links between non-hub nodes, as [id, id] pairs.
+// Every node is already linked to the hub automatically; only add extras here.
+var EXTRA_LINKS = [
+  ["connect-app","directory"],
+  ["question","prompt"],
+  ["prompt","keep"],
+  ["privacy","connect-app"],
+  ["custom","mcp-official"],
+  ["mcp-plain","mcp-official"]
+];
+
+/* ============================================================================
+   SECTION 2 · ENGINE. Do not edit below this line.
+   Radial layout, pan/zoom, filter chips, hover dimming, and the detail panel
+   are all computed from the content section above.
+   ========================================================================= */
+
+// Apply framing
+document.getElementById("kicker").innerHTML = CONFIG.kicker;
+document.getElementById("title").innerHTML = CONFIG.title;
+document.getElementById("subtitle").innerHTML = CONFIG.subtitle;
+document.title = CONFIG.title;
+
+var ANCHOR = NODES.filter(function(n){ return n.cluster==="anchor"; })[0];
+
+// ---------- radial layout by cluster ----------
+(function computeLayout(){
+  var cx=0.5, cy=0.5;
+  ANCHOR.x=cx; ANCHOR.y=cy;
+  var sector = 360/Math.max(ORDER.length,1);
+  ORDER.forEach(function(clr, ci){
+    var group = NODES.filter(function(n){ return n.cluster===clr; });
+    var centerDeg = -90 + ci*sector;
+    var spreadDeg = Math.min(sector*0.75, 60);
+    var N = group.length;
+    group.forEach(function(n, j){
+      n.li = j;
+      var t = N>1 ? (j/(N-1) - 0.5) : 0;
+      var ring = (N>5) ? (j%2) : 0;
+      var r = 0.27 + ring*0.13;
+      var deg = centerDeg + t*spreadDeg;
+      var rad = deg*Math.PI/180;
+      n.x = cx + r*Math.cos(rad);
+      n.y = cy + r*Math.sin(rad)*0.92;
+    });
+  });
+})();
+
+var LINKS = NODES.filter(function(n){ return n.cluster!=="anchor"; }).map(function(n){ return [n.id, ANCHOR.id]; }).concat(EXTRA_LINKS);
+
+var PAPER = "#f4efe4", VW=1000, VH=760, PAD=56;
+var canvas = document.querySelector("#map"), ctx = canvas.getContext("2d");
+var chipsEl = document.querySelector("#chips"), detailEl = document.querySelector("#detail");
+var srcChipsEl = document.querySelector("#srcChips"), srcRow = document.querySelector("#srcRow"), srcLegendEl = document.querySelector("#srcLegend");
+var HAS_SOURCES = Object.keys(SOURCES).length > 0;
+var byId = new Map(NODES.map(function(d){ return [d.id, d]; }));
+var neighbors = new Map(NODES.map(function(d){ return [d.id, new Set()]; }));
+LINKS.forEach(function(l){ neighbors.get(l[0]).add(l[1]); neighbors.get(l[1]).add(l[0]); });
+var anim = new Map(NODES.map(function(d){ return [d.id, {scale:1, alpha:1}]; }));
+var filter="all", srcFilter="all", selectedId=null, hoverId=null, cam={s:1,x:0,y:0};
+var raf=null, lastT=0, fallbackT=null;
+var lerp=function(a,b,t){return a+(b-a)*t;}, clamp=function(v,lo,hi){return Math.min(hi,Math.max(lo,v));};
+var wpos=function(d){return [d.x*VW, d.y*VH];}, toScreen=function(wx,wy){return [cam.x+wx*cam.s, cam.y+wy*cam.s];};
+var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});};
+var C=function(cat){ return (CLUSTERS[cat]||{color:"#8a8275"}).color; };
+function activeFocus(){ return hoverId || selectedId; }
+function matchSrc(d){ return srcFilter==="all" || d.cluster==="anchor" || d.src===srcFilter; }
+function matchGroup(d){ return filter==="all" || d.cluster===filter || d.cluster==="anchor"; }
+function visible(){ return NODES.filter(function(d){ return matchSrc(d) && matchGroup(d); }); }
+function atRest(){ return filter==="all" && srcFilter==="all"; }
+function baseR(d){ return d.cluster==="anchor" ? 28 : 13; }
+function nodeR(d){ return baseR(d)*clamp(cam.s,0.3,1.4)*anim.get(d.id).scale; }
+
+function resize(){ var rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1; canvas.width=Math.floor(rect.width*dpr); canvas.height=Math.floor(rect.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+function fit(all){ var rect=canvas.getBoundingClientRect(); var nodes=all?NODES:visible(); if(!all&&filter!=="all"){ var grp=nodes.filter(function(d){return d.cluster!=="anchor";}); if(grp.length) nodes=grp; } if(!nodes.length) return; var xs=nodes.map(function(d){return d.x*VW;}), ys=nodes.map(function(d){return d.y*VH;}); var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs), minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys)+24; var w=Math.max(maxX-minX,1), h=Math.max(maxY-minY,1); cam.s=clamp(Math.min((rect.width-PAD*2-70)/w,(rect.height-PAD*2)/h),0.3,3); cam.x=(rect.width-(minX+maxX)*cam.s)/2; cam.y=(rect.height-(minY+maxY)*cam.s)/2; }
+
+function requestRender(){ draw(); if(!raf){ lastT=performance.now(); raf=requestAnimationFrame(tick); } clearTimeout(fallbackT); fallbackT=setTimeout(settleNow,240); }
+function targetsFor(d,fs){ return { scale: d.id===hoverId?1.3:d.id===selectedId?1.14:(fs&&fs.has(d.id)?1.05:1), alpha: fs?(fs.has(d.id)?1:0.13):1 }; }
+function focusSetNow(){ var f=activeFocus(); return f? new Set([f].concat(Array.from(neighbors.get(f)||[]))) : null; }
+function settleNow(){ if(raf){ cancelAnimationFrame(raf); raf=null; } var fs=focusSetNow(); NODES.forEach(function(d){ var a=anim.get(d.id), t=targetsFor(d,fs); a.scale=t.scale; a.alpha=t.alpha; }); draw(); }
+function tick(t){ clearTimeout(fallbackT); var k=clamp((t-lastT)/16.7,0,3); lastT=t; var fs=focusSetNow(); var moving=false; NODES.forEach(function(d){ var a=anim.get(d.id), tt=targetsFor(d,fs); a.scale=lerp(a.scale,tt.scale,0.24*k); a.alpha=lerp(a.alpha,tt.alpha,0.24*k); if(Math.abs(a.scale-tt.scale)>0.002||Math.abs(a.alpha-tt.alpha)>0.004) moving=true; }); draw(); raf = moving?requestAnimationFrame(tick):null; }
+
+function shapePts(shape,x,y,r){ var pts=[],i,a; if(shape==="square"){ var q=r*0.68; return [[x-q,y-q],[x+q,y-q],[x+q,y+q],[x-q,y+q]]; } if(shape==="triangle"){ for(i=0;i<3;i++){ a=-Math.PI/2+i*2*Math.PI/3; pts.push([x+r*0.95*Math.cos(a),y+r*0.95*Math.sin(a)]); } return pts; } if(shape==="diamond"){ return [[x,y-r*0.95],[x+r*0.95,y],[x,y+r*0.95],[x-r*0.95,y]]; } if(shape==="star"){ for(i=0;i<10;i++){ a=-Math.PI/2+i*Math.PI/5; var rr=(i%2===0)?r*1.05:r*0.48; pts.push([x+rr*Math.cos(a),y+rr*Math.sin(a)]); } return pts; } if(shape==="hexagon"){ for(i=0;i<6;i++){ a=-Math.PI/2+i*Math.PI/3; pts.push([x+r*0.85*Math.cos(a),y+r*0.85*Math.sin(a)]); } return pts; } return null; }
+function traceShape(shape,x,y,r){ ctx.beginPath(); var pts=shapePts(shape,x,y,r); if(!pts){ ctx.arc(x,y,r,0,Math.PI*2); return; } ctx.moveTo(pts[0][0],pts[0][1]); for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]); ctx.closePath(); }
+function clusterShape(c){ return (CLUSTERS[c]&&CLUSTERS[c].shape)||"circle"; }
+function shapeSVG(shape,color){ if(!shape||shape==="circle") return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="'+color+'"/></svg>'; var pts=shapePts(shape,10,10,7.5).map(function(pt){return pt[0].toFixed(1)+","+pt[1].toFixed(1);}).join(" "); return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><polygon points="'+pts+'" fill="'+color+'" stroke="'+color+'" stroke-width="3.5" stroke-linejoin="round"/></svg>'; }
+function ringGlyph(ring){ if(!ring) return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4.5" fill="#524b40"/></svg>'; var dash={solid:"",dashed:"5,3",dotted:"2,3"}[ring]||""; return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#524b40" stroke-width="2.2"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/></svg>'; }
+function prio(d,focus){ if(d.cluster==="anchor") return 0; if(d.id===focus) return 1; if(focus&&neighbors.get(focus)&&neighbors.get(focus).has(d.id)) return 2; return 3; }
+function draw(){
+  var rect=canvas.getBoundingClientRect(); ctx.clearRect(0,0,rect.width,rect.height);
+  var vis=new Set(visible().map(function(d){return d.id;})); var focus=activeFocus();
+  if(vis.has(ANCHOR.id)){ var ap=toScreen.apply(null,wpos(ANCHOR)); ctx.strokeStyle="rgba(42,38,32,0.06)"; ctx.lineWidth=1; [120,210,300].forEach(function(rr){ ctx.beginPath(); ctx.arc(ap[0],ap[1],rr*cam.s,0,Math.PI*2); ctx.stroke(); }); }
+  LINKS.forEach(function(l){ var a=l[0], b=l[1]; if(!vis.has(a)||!vis.has(b)) return; var da=byId.get(a), db=byId.get(b); var p1=toScreen.apply(null,wpos(da)), p2=toScreen.apply(null,wpos(db)); var hl=focus&&(a===focus||b===focus); var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2; var nx=-(p2[1]-p1[1]), ny=(p2[0]-p1[0]), len=Math.hypot(nx,ny)||1, bow=0.08*Math.hypot(p2[0]-p1[0],p2[1]-p1[1]); ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.quadraticCurveTo(mx+nx/len*bow,my+ny/len*bow,p2[0],p2[1]); var other = da.id===ANCHOR.id?db:da; ctx.strokeStyle=C(other.cluster); ctx.globalAlpha = hl?0.85:(focus?0.06:0.30); ctx.lineWidth = hl?2:1.1; ctx.stroke(); });
+  ctx.globalAlpha=1;
+  visible().forEach(drawNode);
+  var fsz=clamp(9+7*cam.s,10,15); var drawn=[]; var order=visible().slice().sort(function(p,q){return prio(p,focus)-prio(q,focus);});
+  var noCull = !atRest(); order.forEach(function(d){ var a=anim.get(d.id); var must = noCull||d.id===focus||d.cluster==="anchor"||(focus&&neighbors.get(focus)&&neighbors.get(focus).has(d.id)); if(a.alpha<0.3&&!must) return; var sp=toScreen.apply(null,wpos(d)); var r=nodeR(d); var label=d.short||d.title; ctx.font=(d.cluster==="anchor"?700:600)+" "+(d.cluster==="anchor"?fsz+2:fsz)+"px -apple-system,'Segoe UI',Roboto,sans-serif"; var w=ctx.measureText(label).width; var x0=sp[0]-w/2-4, y0=sp[1]+r+5, x1=sp[0]+w/2+4, y1=y0+fsz+5; var hits=function(){return drawn.some(function(rc){return !(x1<rc[0]||x0>rc[2]||y1<rc[1]||y0>rc[3]);});}; if(noCull&&d.cluster!=="anchor"){ var g=0; while(g++<6&&hits()){ y0+=fsz+6; y1=y0+fsz+5; } } else if(!must && hits()) return; ctx.globalAlpha=clamp(a.alpha,0.3,1); ctx.lineWidth=3.5; ctx.strokeStyle=PAPER; ctx.lineJoin="round"; ctx.textAlign="center"; ctx.textBaseline="top"; ctx.strokeText(label,sp[0],y0); ctx.fillStyle="#2a2620"; ctx.fillText(label,sp[0],y0); ctx.globalAlpha=1; drawn.push([x0,y0,x1,y1]); });
+}
+function drawNode(d){ var a=anim.get(d.id); var sp=toScreen.apply(null,wpos(d)); var r=nodeR(d); var color=C(d.cluster); var shape=d.cluster==="anchor"?"circle":clusterShape(d.cluster); var puff=Math.max(2.5,r*0.38); ctx.globalAlpha=a.alpha;
+  traceShape(shape,sp[0],sp[1]+2,r); ctx.fillStyle="rgba(42,38,32,0.10)"; ctx.fill();
+  if(d.id===selectedId||d.id===hoverId){ ctx.beginPath(); ctx.arc(sp[0],sp[1],r+7,0,Math.PI*2); ctx.strokeStyle=color; ctx.globalAlpha=a.alpha*0.45; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha=a.alpha; }
+  if(shape==="circle"){ ctx.beginPath(); ctx.arc(sp[0],sp[1],r,0,Math.PI*2); ctx.fillStyle=color; ctx.fill(); if(d.cluster==="anchor"&&r>8){ ctx.beginPath(); ctx.arc(sp[0],sp[1],Math.max(0,r-5),0,Math.PI*2); ctx.strokeStyle="rgba(244,239,228,0.5)"; ctx.lineWidth=1.5; ctx.stroke(); } ctx.lineWidth=2; ctx.strokeStyle="rgba(251,248,241,0.92)"; ctx.beginPath(); ctx.arc(sp[0],sp[1],r,0,Math.PI*2); ctx.stroke(); }
+  else { ctx.lineJoin="round"; ctx.lineWidth=puff+4; ctx.strokeStyle="rgba(251,248,241,0.92)"; traceShape(shape,sp[0],sp[1],r); ctx.stroke(); traceShape(shape,sp[0],sp[1],r); ctx.fillStyle=color; ctx.fill(); ctx.lineWidth=puff; ctx.strokeStyle=color; traceShape(shape,sp[0],sp[1],r); ctx.stroke(); }
+  if(d.cluster!=="anchor" && d.src && SOURCES[d.src] && SOURCES[d.src].ring){ var RING={solid:[],dashed:[5,4],dotted:[1.5,4]}; ctx.save(); ctx.setLineDash(RING[SOURCES[d.src].ring]||[]); ctx.lineWidth=1.8; ctx.strokeStyle=color; ctx.globalAlpha=a.alpha*0.9; ctx.beginPath(); ctx.arc(sp[0],sp[1],r+4.5,0,Math.PI*2); ctx.stroke(); ctx.restore(); ctx.globalAlpha=a.alpha; }
+  ctx.globalAlpha=1; }
+function nodeAt(px,py){ var vis=visible(); for(var i=vis.length-1;i>=0;i--){ var d=vis[i]; var sp=toScreen.apply(null,wpos(d)); if(Math.hypot(sp[0]-px,sp[1]-py)<=nodeR(d)+6) return d; } return null; }
+
+function chip(cls,label,glyph,count,pressed,onClick){ var b=document.createElement("button"); b.type="button"; b.className=cls; b.setAttribute("aria-pressed",String(pressed)); b.innerHTML=(glyph||"")+"<span>"+esc(label)+"</span><small>"+count+"</small>"; b.onclick=onClick; return b; }
+// group chip counts respect the active source filter, so the two filter rows read as one system
+function countGroup(c){ return NODES.filter(function(d){ return d.cluster!=="anchor" && (c==="all"||d.cluster===c) && (srcFilter==="all"||d.src===srcFilter); }).length; }
+function renderSrcChips(){ if(!HAS_SOURCES) return; srcChipsEl.replaceChildren();
+  srcChipsEl.append(chip("chip src","All sources",null,NODES.filter(function(d){return d.cluster!=="anchor";}).length, srcFilter==="all", function(){ srcFilter="all"; onFilterChange(); }));
+  Object.keys(SOURCES).forEach(function(s){ srcChipsEl.append(chip("chip src",SOURCES[s].label,ringGlyph(SOURCES[s].ring),NODES.filter(function(d){return d.src===s;}).length, srcFilter===s, function(){ srcFilter=s; onFilterChange(); })); }); }
+function renderChips(){ chipsEl.replaceChildren();
+  chipsEl.append(chip("chip","All",null,countGroup("all"), filter==="all", function(){ filter="all"; onFilterChange(); }));
+  ORDER.forEach(function(c){ chipsEl.append(chip("chip",CLUSTERS[c].label,shapeSVG(clusterShape(c),CLUSTERS[c].color),countGroup(c), filter===c, function(){ filter=c; onFilterChange(); })); }); }
+function onFilterChange(){ selectedId=null; hoverId=null; renderPanel(ANCHOR); renderSrcChips(); renderChips(); fit(atRest()); requestRender(); }
+
+function renderPanel(d){
+  if(!d) return;
+  var color = C(d.cluster);
+  if(d.cluster==="anchor"){
+    detailEl.innerHTML =
+      '<p class="p-kicker" style="color:'+color+'">Hub</p>'+
+      '<h2 class="p-title">'+esc(d.title)+'</h2>'+
+      (d.sub ? '<p class="p-source">'+esc(d.sub)+'</p>' : '')+
+      '<div class="p-divider"></div>'+
+      '<p class="p-lead">What this map is</p>'+
+      '<p class="p-rel">'+esc(d.rel)+'</p>'+
+      (d.href ? '<a class="p-btn" style="background:'+color+'" href="'+esc(d.href)+'" target="_blank" rel="noopener">'+(d.linkLabel||CONFIG.linkLabel)+'</a>' : '')+
+      '<p class="p-note">'+NODES.filter(function(n){return n.cluster!=="anchor";}).length+' items in '+ORDER.length+' groups. Tap a dot to read why it is here.</p>';
+    var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0; return;
+  }
+  var sibs = NODES.filter(function(n){ return n.cluster===d.cluster && n.id!==d.id; });
+  var relatedHtml = sibs.length ? '<div class="p-related"><p class="rh">Same group ('+sibs.length+')</p><ul>'+sibs.map(function(s){ return '<li data-id="'+s.id+'">'+shapeSVG(clusterShape(s.cluster),C(s.cluster))+esc(s.short||s.title)+'</li>'; }).join("")+'</ul></div>' : "";
+  var srcBadge = (HAS_SOURCES && d.src && SOURCES[d.src]) ? '<span class="p-src-badge">'+esc(SOURCES[d.src].label)+'</span>' : "";
+  var promptHtml = d.prompt ? '<div class="p-prompt"><p class="pp-head"><span>Copy this prompt</span><button type="button" class="p-copy" style="background:'+color+'">Copy prompt</button></p><pre class="pp-text">'+esc(d.prompt)+'</pre></div>' : "";
+  detailEl.innerHTML =
+    '<p class="p-kicker" style="color:'+color+'">'+esc(CLUSTERS[d.cluster].label)+'</p>'+
+    '<h2 class="p-title">'+esc(d.title)+'</h2>'+
+    (d.sub ? '<p class="p-source">'+esc(d.sub)+'</p>' : '')+
+    srcBadge+
+    '<div class="p-divider"></div>'+
+    '<p class="p-lead">'+CONFIG.relLabel+'</p>'+
+    '<p class="p-rel">'+esc(d.rel)+'</p>'+
+    promptHtml+
+    (d.href ? [{label:(d.linkLabel||CONFIG.linkLabel), href:d.href}] : []).concat(d.links||[]).map(function(b,i){
+      return '<a class="p-btn'+(i?' ghost':'')+'"'+(i?'':' style="background:'+color+'"')+' href="'+esc(b.href)+'" target="_blank" rel="noopener">'+b.label+'</a>';
+    }).join("")+
+    relatedHtml+
+    (d.note ? '<p class="p-note">'+esc(d.note)+'</p>' : "");
+  detailEl.querySelectorAll(".p-related li").forEach(function(el){ el.onclick=function(){ select(el.dataset.id); }; });
+  var copyBtn = detailEl.querySelector(".p-copy");
+  if(copyBtn) copyBtn.onclick = function(){ copyText(d.prompt, copyBtn); };
+  var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0;
+}
+
+// Clipboard with feedback. Tries the async clipboard API, falls back to a hidden
+// textarea + execCommand for older or stricter contexts.
+function copyText(text, btn){
+  var done = function(ok){
+    var old = "Copy prompt";
+    btn.textContent = ok ? "Copied" : "Select the text and copy it manually";
+    setTimeout(function(){ btn.textContent = old; }, 1800);
+  };
+  var fallback = function(){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly","");
+    ta.style.cssText = "position:fixed;left:-9999px;top:0";
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = false; try { ok = document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta); done(ok);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(function(){ done(true); }, fallback);
+  } else { fallback(); }
+}
+
+function select(id){ if(id===selectedId) return deselect(); selectedId=id; renderPanel(byId.get(id)); if(window.innerWidth<=820){ var pn=document.querySelector("#panel"); if(pn) pn.scrollIntoView({behavior:"smooth",block:"start"}); } requestRender(); }
+function deselect(){ selectedId=null; renderPanel(ANCHOR); requestRender(); }
+
+var down=null, moved=false;
+canvas.addEventListener("pointerdown",function(e){ down={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y}; moved=false; try{ canvas.setPointerCapture(e.pointerId); }catch(err){} });
+canvas.addEventListener("pointermove",function(e){ var rect=canvas.getBoundingClientRect(); if(down){ var dx=e.clientX-down.x, dy=e.clientY-down.y; if(Math.hypot(dx,dy)>4) moved=true; cam.x=down.cx+dx; cam.y=down.cy+dy; requestRender(); } else { var hit=nodeAt(e.clientX-rect.left,e.clientY-rect.top); var id=hit?hit.id:null; if(id!==hoverId){ hoverId=id; canvas.style.cursor=id?"pointer":"grab"; requestRender(); } } });
+function endPointer(e){ if(down&&!moved){ var rect=canvas.getBoundingClientRect(); var hit=nodeAt(e.clientX-rect.left,e.clientY-rect.top); if(hit) select(hit.id); else deselect(); } down=null; }
+canvas.addEventListener("pointerup",endPointer);
+canvas.addEventListener("pointercancel",function(){ down=null; });
+canvas.addEventListener("wheel",function(e){ e.preventDefault(); var rect=canvas.getBoundingClientRect(), px=e.clientX-rect.left, py=e.clientY-rect.top; var wx=(px-cam.x)/cam.s, wy=(py-cam.y)/cam.s; cam.s=clamp(cam.s*Math.exp(-e.deltaY*0.0014),0.3,3); cam.x=px-wx*cam.s; cam.y=py-wy*cam.s; requestRender(); },{passive:false});
+function zoomBy(f){ var rect=canvas.getBoundingClientRect(), px=rect.width/2, py=rect.height/2; var wx=(px-cam.x)/cam.s, wy=(py-cam.y)/cam.s; cam.s=clamp(cam.s*f,0.3,3); cam.x=px-wx*cam.s; cam.y=py-wy*cam.s; requestRender(); }
+document.querySelector("#zoomIn").onclick=function(){ zoomBy(1.25); };
+document.querySelector("#zoomOut").onclick=function(){ zoomBy(0.8); };
+document.querySelector("#zoomReset").onclick=function(){ fit(atRest()); requestRender(); };
+window.addEventListener("resize",function(){ resize(); fit(atRest()); requestRender(); });
+
+if(HAS_SOURCES){ srcRow.style.display=""; srcLegendEl.textContent=SOURCE_LEGEND; renderSrcChips(); }
+renderChips();
+resize();
+fit(true);
+renderPanel(ANCHOR);
+requestRender();
+</script>
+
+<!-- Cuts Layout Audit v1.1 · dev-only second look (layout + color contrast) · self-suppresses off file://localhost · strip between markers to publish -->
+<script>
+// --- Cuts Layout Audit v1.1 ---
+(function () {
+  var IS_PROBE = location.hash.indexOf('__audit-probe') !== -1;
+  var ACTIVE = IS_PROBE
+    || location.protocol === 'file:'
+    || location.hostname === 'localhost'
+    || location.hostname === '127.0.0.1'
+    || /[?&]audit\b/.test(location.search);
+  if (!ACTIVE) return;
+
+  var TOL = 1;
+
+  // --- WCAG color-contrast helpers (v1.1) ---
+  function parseColor(s) {
+    if (!s) return null;
+    var m = s.match(/rgba?\(([^)]+)\)/);
+    if (!m) return null;
+    var p = m[1].split(',').map(function (x) { return parseFloat(x); });
+    if (p.length < 3 || isNaN(p[0]) || isNaN(p[1]) || isNaN(p[2])) return null;
+    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  }
+  function lin(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  function relLum(c) { return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b); }
+  function contrast(fg, bg) {
+    var l1 = relLum(fg), l2 = relLum(bg), hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+  function blend(fg, bg) {
+    var a = fg.a == null ? 1 : fg.a;
+    return { r: fg.r * a + bg.r * (1 - a), g: fg.g * a + bg.g * (1 - a), b: fg.b * a + bg.b * (1 - a) };
+  }
+  // Walk ancestors for the first opaque background; bail to indeterminate on an image/gradient.
+  function effectiveBg(el) {
+    var node = el;
+    while (node && node.nodeType === 1) {
+      var s = getComputedStyle(node);
+      var bg = parseColor(s.backgroundColor);
+      if (bg && bg.a === 1) return bg;
+      if (s.backgroundImage && s.backgroundImage !== 'none') return null;
+      node = node.parentElement;
+    }
+    return { r: 255, g: 255, b: 255 };
+  }
+
+  function shortSelector(el) {
+    if (!el || el === document.body) return 'body';
+    if (el.id) return el.tagName.toLowerCase() + '#' + el.id;
+    var sel = el.tagName.toLowerCase();
+    if (el.classList && el.classList.length) sel += '.' + el.classList[0];
+    var p = el.parentElement;
+    if (p) {
+      var sib = Array.prototype.filter.call(p.children, function (c) { return c.tagName === el.tagName; });
+      if (sib.length > 1) sel += ':nth-of-type(' + (sib.indexOf(el) + 1) + ')';
+    }
+    return sel;
+  }
+
+  function audit(widthLabel) {
+    var findings = [];
+    var cMap = {};
+    var docEl = document.documentElement;
+    var vw = window.innerWidth;
+    if (docEl.scrollWidth > docEl.clientWidth + TOL) {
+      findings.push({ kind: 'page-overflow', severity: 'error', selector: 'html',
+        px: docEl.scrollWidth - docEl.clientWidth, note: 'Document is wider than the viewport.' });
+    }
+    var all = document.body ? document.body.querySelectorAll('*') : [];
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.closest && el.closest('#cuts-layout-audit, #cuts-audit-probe, [data-audit-ignore]')) continue;
+      var cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      var r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      if (r.right > vw + TOL && r.left < vw) {
+        var par = el.parentElement;
+        var parRight = par ? par.getBoundingClientRect().right : vw;
+        if (parRight <= vw + TOL) {
+          findings.push({ kind: 'element-overflow', severity: 'error', selector: shortSelector(el),
+            px: Math.round(r.right - vw), note: 'Extends ' + Math.round(r.right - vw) + 'px past the right edge.' });
+        }
+      }
+      var ox = cs.overflowX, oy = cs.overflowY;
+      var clipX = (ox === 'hidden' || ox === 'clip') && el.scrollWidth > el.clientWidth + TOL;
+      var clipY = (oy === 'hidden' || oy === 'clip') && el.scrollHeight > el.clientHeight + TOL;
+      if ((clipX || clipY) && el.textContent && el.textContent.trim().length > 1) {
+        var ellipsis = cs.textOverflow === 'ellipsis' && cs.whiteSpace === 'nowrap';
+        if (!ellipsis) {
+          findings.push({ kind: 'clipped-text', severity: 'warning', selector: shortSelector(el),
+            px: Math.round(Math.max(el.scrollWidth - el.clientWidth, el.scrollHeight - el.clientHeight)),
+            note: 'Text clipped by overflow:' + (clipX ? ox : oy) + '.' });
+        }
+      }
+
+      // Color contrast (WCAG AA). Measured once at current width, not in the 375px probe.
+      if (!IS_PROBE) {
+        var hasText = false, cns = el.childNodes;
+        for (var k = 0; k < cns.length; k++) {
+          if (cns[k].nodeType === 3 && cns[k].nodeValue && cns[k].nodeValue.trim().length) { hasText = true; break; }
+        }
+        var tf = cs.webkitTextFillColor;
+        if (hasText && tf !== 'transparent' && tf !== 'rgba(0, 0, 0, 0)') {
+          var fg = parseColor(cs.color), bg = effectiveBg(el);
+          if (fg && bg) {
+            var fgb = (fg.a != null && fg.a < 1) ? blend(fg, bg) : fg;
+            var cr = contrast(fgb, bg);
+            var fpx = parseFloat(cs.fontSize) || 16;
+            var wt = parseInt(cs.fontWeight, 10) || (cs.fontWeight === 'bold' ? 700 : 400);
+            var large = fpx >= 24 || (fpx >= 18.66 && wt >= 700);
+            var thr = large ? 3 : 4.5;
+            if (cr < thr - 0.05) {
+              var ckey = cs.color + '|' + bg.r + ',' + bg.g + ',' + bg.b + '|' + (large ? 'L' : 'N');
+              if (cMap[ckey]) { cMap[ckey].count++; if (cr < cMap[ckey].ratio) cMap[ckey].ratio = cr; }
+              else cMap[ckey] = { selector: shortSelector(el), ratio: cr, thr: thr, large: large, count: 1 };
+            }
+          }
+        }
+      }
+    }
+    Object.keys(cMap).forEach(function (ck) {
+      var c = cMap[ck];
+      findings.push({ kind: 'low-contrast', severity: 'warning', selector: c.selector, px: 0,
+        note: c.ratio.toFixed(2) + ':1 < ' + c.thr + ':1 (' + (c.large ? 'large' : 'normal') + ' text)' + (c.count > 1 ? ' ·×' + c.count : '') });
+    });
+    return { width: widthLabel || (vw + 'px'), findings: findings.slice(0, 40), total: findings.length };
+  }
+
+  if (IS_PROBE) {
+    var reportUp = function () { try { parent.postMessage({ __cutsAudit: true, result: audit('375px') }, '*'); } catch (e) {} };
+    if (document.readyState === 'complete') setTimeout(reportUp, 60);
+    else window.addEventListener('load', function () { setTimeout(reportUp, 60); });
+    return;
+  }
+
+  var results = { current: null, mobile: null };
+
+  function build() {
+    var css = '#cuts-layout-audit{position:fixed;left:12px;bottom:12px;z-index:2147483600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;display:none}'
+      + '#cuts-layout-audit .la-pill{cursor:pointer;border:none;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.28)}'
+      + '#cuts-layout-audit .la-pill.err{background:#9a1b1b}#cuts-layout-audit .la-pill.warn{background:#8a5a0a}'
+      + '#cuts-layout-audit .la-panel{display:none;margin-top:8px;max-width:min(92vw,440px);max-height:50vh;overflow:auto;background:#0d1117;color:#d8e0ea;border-radius:10px;padding:10px 12px;box-shadow:0 8px 28px rgba(0,0,0,.4);font-size:11.5px;line-height:1.5}'
+      + '#cuts-layout-audit.open .la-panel{display:block}'
+      + '#cuts-layout-audit .la-row{padding:7px 0;border-top:1px solid #222b36}#cuts-layout-audit .la-row:first-child{border-top:none}'
+      + '#cuts-layout-audit .la-kind{font-weight:700;color:#fff}#cuts-layout-audit .la-error .la-kind{color:#f08a8a}#cuts-layout-audit .la-warning .la-kind{color:#f0b46a}'
+      + '#cuts-layout-audit .la-w{margin-left:6px;color:#7e8a99}'
+      + '#cuts-layout-audit .la-sel{display:block;margin:2px 0;color:#cfe3ff;word-break:break-all}'
+      + '#cuts-layout-audit .la-note{color:#aab4c0}';
+    var style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
+    var wrap = document.createElement('div'); wrap.id = 'cuts-layout-audit';
+    wrap.innerHTML = '<button class="la-pill" type="button" aria-label="Layout issues"></button><div class="la-panel"><div class="la-list"></div></div>';
+    document.body.appendChild(wrap);
+    wrap.querySelector('.la-pill').addEventListener('click', function () { wrap.classList.toggle('open'); });
+    return wrap;
+  }
+
+  function render() {
+    var all = [];
+    if (results.current) results.current.findings.forEach(function (f) { f._w = results.current.width; all.push(f); });
+    if (results.mobile) results.mobile.findings.forEach(function (f) { f._w = '375px'; all.push(f); });
+    var errors = all.filter(function (f) { return f.severity === 'error'; });
+    var warns = all.filter(function (f) { return f.severity === 'warning'; });
+    var badge = document.getElementById('cuts-layout-audit');
+    if (!all.length) { if (badge) badge.style.display = 'none'; console.info('%cLayout audit: clean', 'color:#1f5028;font-weight:bold'); return; }
+    if (!badge) badge = build();
+    badge.style.display = 'block';
+    var pill = badge.querySelector('.la-pill');
+    pill.textContent = (errors.length ? '⚠ ' : '⚡ ') + errors.length + ' error' + (errors.length === 1 ? '' : 's') + (warns.length ? ' · ' + warns.length + ' warn' : '');
+    pill.className = 'la-pill ' + (errors.length ? 'err' : 'warn');
+    var list = badge.querySelector('.la-list'); list.innerHTML = '';
+    all.forEach(function (f) {
+      var row = document.createElement('div'); row.className = 'la-row la-' + f.severity;
+      row.innerHTML = '<span class="la-kind"></span><span class="la-w"></span><code class="la-sel"></code><span class="la-note"></span>';
+      row.querySelector('.la-kind').textContent = f.kind;
+      row.querySelector('.la-w').textContent = '@' + f._w;
+      row.querySelector('.la-sel').textContent = f.selector;
+      row.querySelector('.la-note').textContent = (f.px ? f.px + 'px · ' : '') + f.note;
+      list.appendChild(row);
+    });
+    console.warn('Layout audit: ' + errors.length + ' error(s), ' + warns.length + ' warning(s)');
+    try { console.table(all.map(function (f) { return { kind: f.kind, severity: f.severity, width: f._w, px: f.px, selector: f.selector }; })); } catch (e) {}
+  }
+
+  function runMain() {
+    results.current = audit(window.innerWidth + 'px');
+    render();
+    if (window.innerWidth > 400 && !document.getElementById('cuts-audit-probe')) {
+      var f = document.createElement('iframe');
+      f.id = 'cuts-audit-probe'; f.setAttribute('aria-hidden', 'true');
+      f.style.cssText = 'position:absolute;left:-10000px;top:0;width:375px;height:900px;border:0;visibility:hidden';
+      f.src = location.href.split('#')[0] + '#__audit-probe';
+      document.body.appendChild(f);
+    }
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.__cutsAudit && e.data.result) { results.mobile = e.data.result; render(); }
+  });
+  var rt;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { results.current = audit(window.innerWidth + 'px'); render(); }, 250); });
+  if (document.readyState === 'complete') setTimeout(runMain, 80);
+  else window.addEventListener('load', function () { setTimeout(runMain, 80); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { setTimeout(function () { results.current = audit(window.innerWidth + 'px'); render(); }, 50); });
+})();
+// --- end Cuts Layout Audit v1.1 ---
+</script>
+</body>
+</html>
