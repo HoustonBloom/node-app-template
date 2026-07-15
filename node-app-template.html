@@ -61,6 +61,7 @@
   .p-btn{ display:inline-block; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:13.5px; font-weight:700;
     text-decoration:none; color:var(--paper); padding:11px 16px; border-radius:9px; margin:0 6px 8px 0 }
   .p-btn.ghost{ background:transparent; color:var(--accent-deep); border:1px solid var(--accent-deep) }
+  button.p-btn{ cursor:pointer }
   .p-prompt{ margin:0 0 18px; border:1px solid var(--rule); border-radius:10px; background:var(--paper); overflow:hidden }
   .pp-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0; padding:7px 8px 7px 12px;
     border-bottom:1px solid var(--rule); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -213,6 +214,7 @@ var NODES = [
     sub:"GitHub · one folder, three files", href:CONFIG.templateRepo, linkLabel:"Get the template on GitHub &rarr;",
     rel:"Everything lives in one folder: this template, the instructions your assistant reads, and a README. If someone showed you this map and you want your own, download the folder, keep it, and build every map from your copy." },
   { id:"give-folder", cluster:"setup", src:"folder", title:"Hand your assistant this folder", short:"4 · Share this folder",
+    next:{ id:"question", label:"Next: make your first map" },
     sub:"The handoff that makes it work",
     rel:"Your assistant needs two things: this folder and a question. In Claude, open Cowork and choose this folder when it asks where to work; in ChatGPT's desktop app, start a Codex session and pick it. Every prompt on this map starts by telling the assistant to read AGENT-INSTRUCTIONS.md, and from there it knows which part of the template to fill in. You never touch the code." },
 
@@ -455,9 +457,12 @@ function renderPanel(d){
     (d.href ? [{label:(d.linkLabel||CONFIG.linkLabel), href:d.href}] : []).concat(d.links||[]).map(function(b,i){
       return '<a class="p-btn'+(i?' ghost':'')+'"'+(i?'':' style="background:'+color+'"')+' href="'+esc(b.href)+'" target="_blank" rel="noopener">'+b.label+'</a>';
     }).join("")+
+    ((d.next && byId.get(d.next.id)) ? '<button type="button" class="p-btn ghost p-next">'+esc(d.next.label||"Next")+' &rarr;</button>' : "")+
     relatedHtml+
     (d.note ? '<p class="p-note">'+esc(d.note)+'</p>' : "");
   detailEl.querySelectorAll(".p-related li").forEach(function(el){ el.onclick=function(){ select(el.dataset.id); }; });
+  var nextBtn = detailEl.querySelector(".p-next");
+  if(nextBtn) nextBtn.onclick = function(){ jumpTo(d.next.id); };
   var copyBtn = detailEl.querySelector(".p-copy");
   if(copyBtn) copyBtn.onclick = function(){ copyText(d.prompt, copyBtn); };
   var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0;
@@ -484,6 +489,7 @@ function copyText(text, btn){
   } else { fallback(); }
 }
 
+function jumpTo(id){ var t=byId.get(id); if(!t) return; if(!(matchSrc(t)&&matchGroup(t))){ filter="all"; srcFilter="all"; renderSrcChips(); renderChips(); fit(true); } selectedId=null; select(id); }
 function select(id){ if(id===selectedId) return deselect(); selectedId=id; renderPanel(byId.get(id)); if(window.innerWidth<=820){ var pn=document.querySelector("#panel"); if(pn) pn.scrollIntoView({behavior:"smooth",block:"start"}); } requestRender(); }
 function deselect(){ selectedId=null; renderPanel(ANCHOR); requestRender(); }
 
