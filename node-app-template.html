@@ -271,22 +271,23 @@ var NODES = [
     rel:"A first-person account of letting an assistant triage email and draft replies, including the part where it sent a draft early and committed him to a book deal. The lesson holds: review before anything sends." },
 
   // ===== Go deeper =====
-  { id:"mcp-official", cluster:"deeper", src:"official", title:"MCP, the plug underneath all this", short:"What is MCP",
-    sub:"modelcontextprotocol.io", href:"https://modelcontextprotocol.io/", linkLabel:"Read the official intro &rarr;",
-    rel:"The protocol that lets assistants talk to apps, explained by the people who maintain it. The USB-C analogy is theirs, and it is the right one: one port, many devices." },
-  { id:"mcp-plain", cluster:"deeper", src:"web", title:"MCP in plain English", short:"MCP, plainly",
-    sub:"Zapier · updated June 2026", href:"https://zapier.com/blog/mcp/", linkLabel:"Read the explainer &rarr;",
-    rel:"The friendliest version of the story: why an assistant with a standard plug can see your apps and act in them, instead of answering from memory alone." },
+  { id:"restyle", cluster:"deeper", src:"folder", title:"Make the map look like you", short:"Restyle it",
+    sub:"Colors, shapes, labels, title: all editable",
+    prompt:"Open [my map file] and restyle it: change the group colors to [my palette], pick different shapes if any two read too alike, and rewrite the title and subtitle in my words. Edit that map file in place. Leave node-app-template.html untouched. This prompt is one specific recipe: name any look you want.",
+    rel:"Every color, shape, group label, and title lives in a marked content section your assistant can edit. Ask for your palette and your words. The engine keeps working underneath." },
+  { id:"refresh", cluster:"deeper", src:"folder", title:"Refresh a map when things change", short:"Refresh a map",
+    sub:"Same source, same question, updated dots",
+    prompt:"Open [my map file] and refresh it from [the same app]: add what is new, drop what no longer belongs, and note in the subtitle when it was last refreshed. Edit that map file in place. Leave node-app-template.html untouched. This prompt is one specific recipe: change what counts as stale to fit.",
+    rel:"Maps go stale the moment life moves. A refresh is one prompt, and the collaborator map earns one every few weeks: who went quiet, who showed up new." },
+  { id:"share", cluster:"deeper", src:"folder", title:"Share a map you made", short:"Share a map",
+    sub:"One file · email it, Drive it, send it",
+    rel:"A map is one file, so sharing is just sending it. Before you do, tap through the panels once and read them as the recipient will: every name, link, and note travels with the file." },
   { id:"why-maps", cluster:"deeper", src:"web", title:"Why a map beats a list", short:"Why maps work",
     sub:"Eric J. Ma's blog · December 2020", href:"https://ericmjl.github.io/blog/2020/12/15/building-a-personal-knowledge-graph-on-obsidian/", linkLabel:"Read the essay &rarr;",
     rel:"Written about linked note-taking, but the argument is this template's argument: a graph externalizes how things relate in your head, and the surprising connections show up in the picture, not the list." },
   { id:"privacy", cluster:"deeper", src:"web", title:"Think before you click Allow", short:"Privacy first",
     sub:"TechCrunch · July 2025", href:"https://techcrunch.com/2025/07/19/for-privacy-and-security-think-twice-before-granting-ai-access-to-your-personal-data/", linkLabel:"Read it before you connect &rarr;",
     rel:"Connecting an app can hand over years of email and contacts in one click, often more than the feature needs. Read the permission screen. This is the article to read before your first connection, not after." },
-  { id:"failure-modes", cluster:"deeper", src:"web", title:"The failure modes, honestly", short:"Failure modes",
-    sub:"MIT Technology Review · February 2026", href:"https://www.technologyreview.com/2026/02/11/1132768/is-a-secure-ai-assistant-possible/", linkLabel:"See the failure modes &rarr;",
-    note:"MIT Technology Review meters some articles; this one loaded free when checked.",
-    rel:"Two ways a connected assistant goes wrong: honest mistakes, and prompt injection, where a malicious page hijacks its instructions. Worth knowing both before you trust one with your inbox." },
 
   // ===== Additional resources =====
   { id:"cls", cluster:"resources", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
@@ -315,8 +316,8 @@ var EXTRA_LINKS = [
   ["question","prompt"],
   ["prompt","keep"],
   ["privacy","connect-app"],
-  ["custom","mcp-official"],
-  ["mcp-plain","mcp-official"]
+  ["share","privacy"],
+  ["refresh","collaborators"]
 ];
 
 /* ============================================================================
