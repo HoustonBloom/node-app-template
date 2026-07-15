@@ -54,6 +54,7 @@ These four are working recipes, not hypotheticals: each one is a map that has be
 - **15 to 40 dots reads best.** Ask your assistant to pick the most relevant items, not all of them.
 - **The "why" is the good part.** Each dot carries one or two sentences on why it belongs. Ask your assistant to make those sentences specific to your question.
 - **Iterate out loud.** "Add a group for tools," "drop the ones older than 2024," "make the links open in Drive." Your assistant edits the same file.
+- **A map is a snapshot, so make refresh a routine.** The data is only as current as the day it was drawn. Claude and ChatGPT can both run scheduled tasks that refresh a map on a rhythm; the "Refresh routine" dot on the starter map shows how.
 - **A red or amber badge in a map's corner means the layout broke somewhere.** Ask your assistant to fix it.
 
 ## Privacy, worth thirty seconds

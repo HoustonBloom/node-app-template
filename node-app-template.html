@@ -197,7 +197,7 @@ var SOURCE_LEGEND = "plain dot = in this folder · solid ring = official docs ·
 //   note     optional small print at the bottom of the panel
 var NODES = [
   { id:"hub", cluster:"anchor", title:"Using this template for your own work", short:"Start here",
-    sub:"Every link on this map checked July 14, 2026",
+    sub:"Every link on this map checked July 2026",
     href:CONFIG.templateRepo, linkLabel:"Read the guide on GitHub &rarr;",
     rel:"You are looking at the guide. Every dot on this map teaches one piece of getting set up: the AI app to download, what you can connect, prompts worth stealing. Read what interests you, then ask your assistant for a map of your own." },
 
@@ -272,10 +272,13 @@ var NODES = [
     sub:"Colors, shapes, labels, title: all editable",
     prompt:"Open [my map file] and restyle it: change the group colors to [my palette], pick different shapes if any two read too alike, and rewrite the title and subtitle in my words. Edit that map file in place. Leave node-app-template.html untouched. This prompt is one specific recipe: name any look you want.",
     rel:"Every color, shape, group label, and title lives in a marked content section your assistant can edit. Ask for your palette and your words. The engine keeps working underneath." },
-  { id:"refresh", cluster:"deeper", src:"folder", title:"Refresh a map when things change", short:"Refresh a map",
-    sub:"Same source, same question, updated dots",
-    prompt:"Open [my map file] and refresh it from [the same app]: add what is new, drop what no longer belongs, and note in the subtitle when it was last refreshed. Edit that map file in place. Leave node-app-template.html untouched. This prompt is one specific recipe: change what counts as stale to fit.",
-    rel:"Maps go stale the moment life moves. A refresh is one prompt, and the collaborator map earns one every few weeks: who went quiet, who showed up new." },
+  { id:"refresh", cluster:"deeper", src:"folder", title:"Maps go stale. Make refresh a routine", short:"Refresh routine",
+    sub:"Same source, same question, on a schedule",
+    href:"https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork", linkLabel:"Schedules in Claude &rarr;",
+    links:[{label:"Tasks in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/10291617-tasks-in-chatgpt"}],
+    note:"Schedules sit on paid plans in both. A routine that edits a file on your computer needs the desktop kind of scheduled task, not the cloud kind.",
+    prompt:"Open [my map file] and refresh it from [the same app]: add what is new, drop what no longer belongs, and note in the subtitle when it was last refreshed. Edit that map file in place. Leave node-app-template.html untouched. If you can schedule tasks on this computer, set this refresh to repeat every [two weeks]. This prompt is one specific recipe: change what counts as stale to fit.",
+    rel:"A map is a snapshot: true the day it is built, going stale the moment life moves. The fix is a routine. Both assistants can run one on a schedule (Claude calls them scheduled tasks, ChatGPT calls them tasks), so the refresh happens without you remembering it. The collaborator map is the one that earns a standing slot." },
   { id:"share", cluster:"deeper", src:"folder", title:"Share a map you made", short:"Share a map",
     sub:"One file · email it, Drive it, send it",
     rel:"A map is one file, so sharing is just sending it. Before you do, tap through the panels once and read them as the recipient will: every name, link, and note travels with the file." },
