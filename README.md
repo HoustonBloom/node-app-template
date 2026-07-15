@@ -34,22 +34,19 @@ Your assistant reads the instructions file, pulls from your app, and writes a ne
 
 ## Example prompts
 
-Steal one of these and swap in your own question. Every one ends the same way on purpose: new file, template untouched.
+These four are working recipes, not hypotheticals: each one is a map that has been built and used. Steal one, fill in the brackets, and edit any line to fit how you work. They all end the same way on purpose: new file, template untouched.
 
-**From Google Drive**
-> Read AGENT-INSTRUCTIONS.md in this folder. Scan my Google Drive folder called "Research" and build a node map answering: what have I already collected about community gardens, and how does it connect? Each dot should link back to the Drive file. Save the map as a new file in this folder and leave node-app-template.html untouched.
+**How does this connect to my work?** (works with any connector you have)
+> Read AGENT-INSTRUCTIONS.md in this folder. First ask me to describe my work in a few sentences, and make that the hub. Then go through my [app] and build me a version of node-app-template.html answering: how does what I have saved connect to my work? Group items by the part of my work they touch, write each node's explanation as the specific connection, and link every node to its source. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: change the app or the grouping to fit.
 
-**From email**
-> Read AGENT-INSTRUCTIONS.md in this folder. Look through my email from the last six months and build a node map of the people and organizations involved in the school fundraiser, grouped by how they are involved. Only include people I would be comfortable showing on a shared screen. Save the map as a new file in this folder and leave node-app-template.html untouched.
+**Keep up with your collaborators** (needs an email connector; Gmail works in Claude and ChatGPT)
+> Read AGENT-INSTRUCTIONS.md in this folder. Then look through my email from the last [three months] and build me a version of node-app-template.html mapping the people and organizations active around [my project], grouped by what each is working on with me. Note each person's last thread and when it happened. Include only people I would be comfortable showing on a shared screen. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: change the time window, the project, or the grouping to fit.
 
-**From your calendar**
-> Read AGENT-INSTRUCTIONS.md in this folder. Look at my calendar for this year and build a node map answering: where does my time go? Group recurring commitments, one-offs, and travel. Save the map as a new file in this folder and leave node-app-template.html untouched.
+**Synthesize a Drive folder of research** (needs the Google Drive connector)
+> Read AGENT-INSTRUCTIONS.md in this folder. Then go through my Google Drive folder [folder name] and build me a version of node-app-template.html answering: what does this library already say about [my question]? Group documents by theme, give each node one or two sentences on what that document contributes, and link every node to its file in Drive. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: swap the folder, the question, or the grouping to fit.
 
-**From your notes app**
-> Read AGENT-INSTRUCTIONS.md in this folder. Go through my notes and build a node map of every idea I have written down for the podcast, grouped by how ready each one is. Save the map as a new file in this folder and leave node-app-template.html untouched.
-
-**From your bookmarks or read-later app** (works when your bookmarks app appears in the connectors directory)
-> Read AGENT-INSTRUCTIONS.md in this folder. Go through my saved bookmarks and build a node map answering: which of my saved links would help me start a small business? Group them by what stage they help with. Save the map as a new file in this folder and leave node-app-template.html untouched.
+**Surface what your community is saving** (needs a bookmarking or feed connector, like Pinboard or RSS)
+> Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.
 
 ## Tips for a good map
 

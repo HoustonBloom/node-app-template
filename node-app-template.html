@@ -245,22 +245,22 @@ var NODES = [
     rel:"Your assistant builds every new map as a new file and leaves node-app-template.html alone. If a map ever goes wrong, delete it and build another from the clean copy." },
 
   // ===== Use cases to steal =====
-  { id:"research", cluster:"ideas", src:"folder", title:"Map a research pile", short:"Research map",
-    sub:"Works with Drive, Notion, folders",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my [Drive folder, Notion space, or local folder] for [project] and build me a version of node-app-template.html answering: what have I already collected about [topic], and how does it connect? Group items by theme, link every node back to its source document, and save the map as a new file in this folder. Leave node-app-template.html untouched.",
-    rel:"Point it at the folder where a project's reading has been piling up and ask what you already have and how it connects. The gaps become obvious once it is drawn." },
-  { id:"people", cluster:"ideas", src:"folder", title:"Map the people around a project", short:"People map",
-    sub:"Works with email and calendar",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then look through my email and calendar around [project or event] and build me a version of node-app-template.html mapping the people and organizations involved, grouped by how they are involved. Include only people I would be comfortable showing on a shared screen. Save the map as a new file in this folder. Leave node-app-template.html untouched.",
-    rel:"Who is involved in the fundraiser, grouped by how they are involved, each dot linked to the last thread. The consent line is part of the prompt on purpose: keep it." },
-  { id:"links", cluster:"ideas", src:"folder", title:"Map your saved links", short:"Bookmarks map",
-    sub:"Works when your bookmarks app has a connector",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my saved bookmarks and build me a version of node-app-template.html answering: which of my saved links would help me [goal]? Group them by what stage they help with, link every node to its bookmark, and save the map as a new file in this folder. Leave node-app-template.html untouched.",
-    rel:"Everything you saved about one topic, finally in one view. The map shows which saves still matter, and the leftover clutter gets easier to let go of." },
   { id:"my-work", cluster:"ideas", src:"folder", title:"How does this connect to my work?", short:"My work map",
-    sub:"Works with any connected app",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. First ask me to describe my work in a few sentences, and make that the hub. Then go through my [app] and build me a version of node-app-template.html answering: how does what I have saved connect to my work? Group items by the part of my work they touch, write each node's explanation as the specific connection, and link every node to its source. Save the map as a new file in this folder. Leave node-app-template.html untouched.",
+    sub:"Works with any connector you have",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. First ask me to describe my work in a few sentences, and make that the hub. Then go through my [app] and build me a version of node-app-template.html answering: how does what I have saved connect to my work? Group items by the part of my work they touch, write each node's explanation as the specific connection, and link every node to its source. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: change the app or the grouping to fit.",
     rel:"The anchor does not have to be a question. Make it your work: your project, practice, or program, described in a few sentences. Then everything you have saved gets read against it, and each dot answers one thing: what this has to do with what you are building." },
+  { id:"collaborators", cluster:"ideas", src:"folder", title:"Keep up with your collaborators", short:"Collaborator map",
+    sub:"Needs: an email connector (Gmail, in Claude or ChatGPT)",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then look through my email from the last [three months] and build me a version of node-app-template.html mapping the people and organizations active around [my project], grouped by what each is working on with me. Note each person's last thread and when it happened. Include only people I would be comfortable showing on a shared screen. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: change the time window, the project, or the grouping to fit.",
+    rel:"The workflow this template grew out of: one inbox, drawn as the network of collaborators around the work. Rebuild it every few weeks and it shows who went quiet, which threads deserve a reply, and who keeps showing up." },
+  { id:"drive-synthesis", cluster:"ideas", src:"folder", title:"Synthesize a Drive folder of research", short:"Research synthesis",
+    sub:"Needs: the Google Drive connector",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my Google Drive folder [folder name] and build me a version of node-app-template.html answering: what does this library already say about [my question]? Group documents by theme, give each node one or two sentences on what that document contributes, and link every node to its file in Drive. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: swap the folder, the question, or the grouping to fit.",
+    rel:"A folder of collected PDFs and docs becomes a readable answer: what we already have, and how it hangs together. Every dot opens the real document, so the map doubles as the folder's front door." },
+  { id:"community-links", cluster:"ideas", src:"folder", title:"Surface what your community is saving", short:"Community links",
+    sub:"Needs: a bookmarking or feed connector (Pinboard, RSS)",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.",
+    rel:"Bookmarks are a quiet signal: what the people around you find worth keeping. Point this at a shared tag or feed and the community's reading becomes a picture you can talk about together." },
   { id:"day-to-day", cluster:"ideas", src:"web", title:"What this looks like day to day", short:"A day with it",
     sub:"TechCrunch · April 2025", href:"https://techcrunch.com/2025/04/15/anthropics-claude-now-read-your-gmail/", linkLabel:"Read the story &rarr;",
     rel:"A mainstream look at Claude reading Gmail and Calendar: personalized help without re-uploading files or writing long prompts. Useful for calibrating what a connected assistant can do in practice." },
@@ -442,7 +442,7 @@ function renderPanel(d){
   var sibs = NODES.filter(function(n){ return n.cluster===d.cluster && n.id!==d.id; });
   var relatedHtml = sibs.length ? '<div class="p-related"><p class="rh">Same group ('+sibs.length+')</p><ul>'+sibs.map(function(s){ return '<li data-id="'+s.id+'">'+shapeSVG(clusterShape(s.cluster),C(s.cluster))+esc(s.short||s.title)+'</li>'; }).join("")+'</ul></div>' : "";
   var srcBadge = (HAS_SOURCES && d.src && SOURCES[d.src]) ? '<span class="p-src-badge">'+esc(SOURCES[d.src].label)+'</span>' : "";
-  var promptHtml = d.prompt ? '<div class="p-prompt"><p class="pp-head"><span>Copy this prompt</span><button type="button" class="p-copy" style="background:'+color+'">Copy prompt</button></p><pre class="pp-text">'+esc(d.prompt)+'</pre></div>' : "";
+  var promptHtml = d.prompt ? '<div class="p-prompt"><p class="pp-head"><span>Copy this prompt &middot; yours to edit</span><button type="button" class="p-copy" style="background:'+color+'">Copy prompt</button></p><pre class="pp-text">'+esc(d.prompt)+'</pre></div>' : "";
   detailEl.innerHTML =
     '<p class="p-kicker" style="color:'+color+'">'+esc(CLUSTERS[d.cluster].label)+'</p>'+
     '<h2 class="p-title">'+esc(d.title)+'</h2>'+

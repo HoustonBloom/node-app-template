@@ -51,7 +51,7 @@ Exactly one node keeps `cluster:"anchor"`: it is the hub, and its `rel` states t
 | `href` | no | link the panel button opens (the Drive URL, the bookmark, the mailto) |
 | `linkLabel` | no | per-node button text, e.g. `"Open in Drive &rarr;"` |
 | `links` | no | extra links as `[{label, href}, ...]`; rendered as secondary buttons after the main one |
-| `prompt` | no | copy-able prompt text; renders as a block with a working Copy button. Use for nodes that teach prompting. Any prompt that builds a map must end by instructing the agent to save a new file and leave node-app-template.html untouched |
+| `prompt` | no | copy-able prompt text; renders as a block with a working Copy button. Use for nodes that teach prompting. Write prompts as editable examples: brackets for the fill-ins, and a closing line telling the person the recipe is theirs to change. Any prompt that builds a map must end by instructing the agent to save a new file and leave node-app-template.html untouched |
 | `note` | no | small print at the panel bottom |
 
 Layout is computed automatically from `cluster` membership. Do not add `x`/`y`.
