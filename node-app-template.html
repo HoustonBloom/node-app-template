@@ -16,7 +16,7 @@
   body{ background:var(--paper); color:var(--ink); font-family:Georgia,'Times New Roman',serif; line-height:1.55; }
   .ui{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif }
   .shell{ max-width:1180px; margin:0 auto; padding:22px 18px 40px }
-  header.top{ display:block; border-bottom:2px solid var(--ink); padding:var(--s5) 0 var(--s4) }
+  header.top{ display:block; border-bottom:2px solid var(--ink); padding:var(--s4) 0 var(--s4) }
   .masthead{ text-align:center }
   .masthead .kicker{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px;
     letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700; margin:0 0 var(--s2) }
@@ -50,7 +50,9 @@
     letter-spacing:.04em; padding:3px 9px; border-radius:999px; margin:10px 0 0; background:var(--paper); color:var(--ink-soft);
     border:1px solid var(--rule) }
 
-  .grid{ display:grid; grid-template-columns:1fr 380px; gap:16px; height:min(74vh,700px) }
+  /* Size the map to the viewport that is actually left under the header, so someone opening the
+     file sees the whole graph rather than the top of it. */
+  .grid{ display:grid; grid-template-columns:1fr 380px; gap:16px; height:clamp(330px, calc(100vh - 360px), 700px) }
   .map-wrap{ position:relative; background:var(--map); border:1px solid var(--rule); border-radius:14px; overflow:hidden }
   canvas{ width:100%; height:100%; display:block; touch-action:none; cursor:grab }
   .zoom{ position:absolute; right:12px; bottom:40px; display:flex; flex-direction:column; gap:6px }
@@ -377,11 +379,15 @@ var ANCHOR = NODES.filter(function(n){ return n.cluster==="anchor"; })[0];
     group.forEach(function(n, j){
       n.li = j;
       var t = N>1 ? (j/(N-1) - 0.5) : 0;
-      // Alternating rings breaks a numbered sequence: 1 and 3 near, 2 and 4 far reads as scatter
-      // rather than order. Only stagger once a group is too big for one arc to hold, and stagger
-      // gently. The label placer handles same-height labels on its own.
-      var ring = (N>5) ? (j%2) : 0;
-      var r = 0.27 + ring*0.10;
+      // Stagger by GROUP, not within one. Alternating inside a group breaks a numbered sequence
+      // (1 and 3 near, 2 and 4 far reads as scatter), but putting every group on one circle puts
+      // every node in the map on one circle, where neighbouring sectors collide at their edges.
+      // So each group keeps a single clean arc and sits at its own radius from the one beside it.
+      // Alternate the radius group by group. With an odd number of groups the first and last
+      // would both land on ring 0 and sit adjacent, so the last one takes a third radius.
+      var ring = ci % 2;
+      if(ORDER.length % 2 === 1 && ci === ORDER.length-1) ring = 2;
+      var r = 0.27 + ring*0.11 + (N>6 ? (j%2)*0.08 : 0);
       var deg = centerDeg + t*spreadDeg;
       var rad = deg*Math.PI/180;
       n.x = cx + r*Math.cos(rad);
@@ -463,9 +469,9 @@ function nodeR(d){ return baseR(d)*clamp(cam.s,0.3,1.4)*anim.get(d.id).scale; }
 // The hint line and the zoom column are HTML sitting on top of the canvas. Measure them once per
 // resize so labels can route around them instead of drawing underneath, and so the camera can
 // keep the map clear of the hint. Cached because this runs inside the draw loop.
-var OVERLAYS=[], CANVAS_H=0, BOTTOM_INSET=0;
+var OVERLAYS=[], CANVAS_H=0, CANVAS_W=0, BOTTOM_INSET=0;
 function measureOverlays(){
-  var cr=canvas.getBoundingClientRect(); CANVAS_H=cr.height; OVERLAYS=[];
+  var cr=canvas.getBoundingClientRect(); CANVAS_H=cr.height; CANVAS_W=cr.width; OVERLAYS=[];
   [document.querySelector("#hint"), document.querySelector(".zoom")].forEach(function(el){
     if(!el) return; var r=el.getBoundingClientRect();
     OVERLAYS.push([r.left-cr.left-8, r.top-cr.top-8, r.right-cr.left+8, r.bottom-cr.top+8]);
@@ -525,7 +531,18 @@ function draw(){
   LINKS.forEach(function(l){ var a=l[0], b=l[1]; if(!vis.has(a)||!vis.has(b)) return; var da=byId.get(a), db=byId.get(b); var p1=toScreen.apply(null,wpos(da)), p2=toScreen.apply(null,wpos(db)); var hl=focus&&(a===focus||b===focus); var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2; var nx=-(p2[1]-p1[1]), ny=(p2[0]-p1[0]), len=Math.hypot(nx,ny)||1, bow=0.08*Math.hypot(p2[0]-p1[0],p2[1]-p1[1]); ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.quadraticCurveTo(mx+nx/len*bow,my+ny/len*bow,p2[0],p2[1]); var other = da.id===ANCHOR.id?db:da; ctx.strokeStyle=C(other.cluster); ctx.globalAlpha = hl?0.85:(focus?0.06:0.30); ctx.lineWidth = hl?2:1.1; ctx.stroke(); });
   ctx.globalAlpha=1;
   visible().forEach(drawNode);
-  var fsz=clamp(9+7*cam.s,10,15); var drawn=OVERLAYS.slice(); var order=visible().slice().sort(function(p,q){return prio(p,focus)-prio(q,focus);});
+  var fsz=clamp(9+7*cam.s,10,15); var order=visible().slice().sort(function(p,q){return prio(p,focus)-prio(q,focus);});
+  // Seed the occupied list with the overlay chrome AND every visible dot. A label that clears the
+  // other labels but lands on someone else's dot is just as unreadable, and dots were invisible
+  // to this test until now.
+  var drawn=OVERLAYS.slice();
+  var dotBoxes={};
+  order.forEach(function(d){
+    if(anim.get(d.id).alpha<0.35) return;
+    var p=toScreen.apply(null,wpos(d)), rr=nodeR(d)+2;
+    var box=[p[0]-rr,p[1]-rr,p[0]+rr,p[1]+rr];
+    dotBoxes[d.id]=box; drawn.push(box);
+  });
   var noCull = !atRest();
   order.forEach(function(d){
     var a=anim.get(d.id);
@@ -536,32 +553,37 @@ function draw(){
     // the hub draws two pixels larger than everything else, so derive the line box from the font
     // this node actually uses, not from fsz. Assuming one height let the hub label overlap by 2px.
     var w=ctx.measureText(label).width, lh=(d.cluster==="anchor"?fsz+2:fsz)+5;
-    var x0=sp[0]-w/2-4, x1=sp[0]+w/2+4;
     // A slot is free when it clears every label already placed, both overlay boxes, and the
     // canvas edges. drawn is seeded with the overlays, so one test covers all three.
-    var free=function(ty0){
-      var ty1=ty0+lh;
-      if(ty0<2 || ty1>CANVAS_H-2) return false;
-      return !drawn.some(function(rc){ return !(x1<rc[0]||x0>rc[2]||ty1<rc[1]||ty0>rc[3]); });
+    var own=dotBoxes[d.id], boxW=w+8;
+    var free=function(bx,by){
+      if(by<2 || by+lh>CANVAS_H-2 || bx<2 || bx+boxW>CANVAS_W-2) return false;
+      return !drawn.some(function(rc){ if(rc===own) return false;
+        return !(bx+boxW<rc[0]||bx>rc[2]||by+lh<rc[1]||by>rc[3]); });
     };
-    var below=sp[1]+r+5, above=sp[1]-r-5-lh, step=lh+1, y0=null;
+    // Candidate slots, best first: below and above read most naturally, then out to the side,
+    // which is the free direction in a radial layout, then stepped further away.
+    var cx=sp[0]-w/2-4, below=sp[1]+r+5, above=sp[1]-r-5-lh, step=lh+1, mid=sp[1]-lh/2;
+    var cands=[[cx,below],[cx,above]];
+    if(sp[0]>=CANVAS_W/2) cands.push([sp[0]+r+7,mid],[sp[0]-r-7-boxW,mid]);
+    else                  cands.push([sp[0]-r-7-boxW,mid],[sp[0]+r+7,mid]);
+    for(var g=1;g<=6;g++){ cands.push([cx,below+g*step]); cands.push([cx,above-g*step]); }
+    var pos=null;
     if(must||noCull){
-      // Alternate below and above before marching away from the dot. A row of dots used to become
-      // a column of labels walking off the bottom of the map.
-      var cands=[below,above];
-      for(var g=1;g<=6;g++){ cands.push(below+g*step); cands.push(above-g*step); }
-      for(var ci=0;ci<cands.length;ci++){ if(free(cands[ci])){ y0=cands[ci]; break; } }
+      for(var ci=0;ci<cands.length;ci++){ if(free(cands[ci][0],cands[ci][1])){ pos=cands[ci]; break; } }
       // Nowhere to put it. On a small screen showing every node at once that happens, and a pile
       // of stacked labels is worse than a missing one. Only the dot being looked at may force a
       // position; everything else, the hub included, drops out until there is room.
-      if(y0===null){ if(d.id===focus) y0=below; else return; }
+      if(!pos){ if(d.id===focus) pos=[cx,below]; else return; }
     } else {
-      if(!free(below)) return;
-      y0=below;
+      if(!free(cx,below)) return;
+      pos=[cx,below];
     }
+    var x0=pos[0], y0=pos[1], x1=x0+boxW;
     ctx.globalAlpha=clamp(a.alpha,0.3,1); ctx.lineWidth=3.5; ctx.strokeStyle=PAPER; ctx.lineJoin="round";
     ctx.textAlign="center"; ctx.textBaseline="top";
-    ctx.strokeText(label,sp[0],y0); ctx.fillStyle="#2a2620"; ctx.fillText(label,sp[0],y0);
+    var drawX=x0+4+w/2;
+    ctx.strokeText(label,drawX,y0); ctx.fillStyle="#2a2620"; ctx.fillText(label,drawX,y0);
     ctx.globalAlpha=1; drawn.push([x0,y0,x1,y0+lh]);
   });
 }
