@@ -6,7 +6,7 @@ You are populating a self-contained HTML node map for a person who is not techni
 
 ## What you are building
 
-`node-app-template.html` is a single-file interactive map: a hub question at the center, items from the person's connected app arranged around it in colored groups, every item clickable.
+`START-HERE.html` is a single-file interactive map: a hub question at the center, items from the person's connected app arranged around it in colored groups, every item clickable.
 
 Your job is content only. The engine does the rest, and because every map you build is a copy of this file, every map you build inherits all of it. You do not implement any of the following, and you do not remove any of it:
 
@@ -18,8 +18,8 @@ Your job is content only. The engine does the rest, and because every map you bu
 
 ## The contract
 
-1. **Copy the template to a new file. Never modify `node-app-template.html` itself, for any reason.** The template ships as a getting-started map, and that content is the person's permanent guide to this whole system. Every map you build is a copy. If the person asks you to "update" or "fix" the template, confirm they mean a copy first. One maintainer exception: whoever publishes this template may set `templateRepo` in CONFIG and delete that node's placeholder note line. That is the only sanctioned edit to the template file.
-2. **Save the copy next to the template, at the top level of this folder.** Same folder as `node-app-template.html` and this file, not a subfolder, not a scratch directory, not somewhere else on the person's disk. Name it after the question in kebab-case: `recipes-for-a-crowd.html`. The person opens their maps by double-clicking them, so every map they own sits in one place they already know. Put it elsewhere only if the person names the place. When you hand the map back, say where it is by folder and file name.
+1. **Copy the template to a new file. Never modify `START-HERE.html` itself, for any reason.** The template ships as a getting-started map, and that content is the person's permanent guide to this whole system. Every map you build is a copy. If the person asks you to "update" or "fix" the template, confirm they mean a copy first. One maintainer exception: whoever publishes this template may set `templateRepo` in CONFIG and delete that node's placeholder note line. That is the only sanctioned edit to the template file.
+2. **Save the copy next to the template, at the top level of this folder.** Same folder as `START-HERE.html` and this file, not a subfolder, not a scratch directory, not somewhere else on the person's disk. Name it after the question in kebab-case: `recipes-for-a-crowd.html`. The person opens their maps by double-clicking them, so every map they own sits in one place they already know. Put it elsewhere only if the person names the place. When you hand the map back, say where it is by folder and file name.
 3. **Edit only SECTION 1** (marked `SECTION 1 · YOUR CONTENT` in the file). Everything below the `SECTION 2 · ENGINE` marker, including the layout audit block at the bottom, stays byte-identical. That block is what gives your map the behavior described above. Copying the file is the whole inheritance mechanism: nothing to install, nothing to wire up, and nothing to delete because it looks unused.
 4. **Every node must be real.** Each node comes from something you found in the person's connected app. Never invent items, counts, dates, or links. If a field is unknown, omit it.
 5. **People are sensitive data.** If nodes are people, include only people the person asked for, and put nothing in a panel the person would not show on a shared screen. When in doubt, ask before writing.
@@ -71,7 +71,7 @@ Exactly one node keeps `cluster:"anchor"`: it is the hub, and its `rel` states t
 | `href` | no | link the panel button opens (the Drive URL, the bookmark, the mailto) |
 | `linkLabel` | no | per-node button text, e.g. `"Open in Drive &rarr;"` |
 | `links` | no | extra links as `[{label, href}, ...]`; rendered as secondary buttons after the main one |
-| `prompt` | no | copy-able prompt text; renders as a block with a working Copy button. Use for nodes that teach prompting. Write prompts as editable examples: brackets for the fill-ins, and a closing line telling the person the recipe is theirs to change. Any prompt that builds a map must end by instructing the agent to save a new file and leave node-app-template.html untouched |
+| `prompt` | no | copy-able prompt text; renders as a block with a working Copy button. Use for nodes that teach prompting. Write prompts as editable examples: brackets for the fill-ins, and a closing line telling the person the recipe is theirs to change. Any prompt that builds a map must end by instructing the agent to save a new file and leave START-HERE.html untouched |
 | `note` | no | small print at the panel bottom |
 | `next` | no | `{id, label}` renders a button that jumps to another node, clearing the filter if needed. The hub can carry one too, and should: it is the panel every reader lands on, so give it a `next` into the first step rather than leaving them to find it. Chain every step of a numbered sequence to the one after it, and point the last step at whatever the reader is meant to do with all of it. A step with no `next` is where the guided path stops |
 
