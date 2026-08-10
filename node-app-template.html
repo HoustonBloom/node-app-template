@@ -675,9 +675,9 @@ renderPanel(ANCHOR);
 requestRender();
 </script>
 
-<!-- Cuts Layout Audit v1.1 · dev-only second look (layout + color contrast) · self-suppresses off file://localhost · strip between markers to publish -->
+<!-- Cuts Layout Audit v1.2 · dev-only second look (layout, color contrast, canvas text) · self-suppresses off file://localhost · strip between markers to publish -->
 <script>
-// --- Cuts Layout Audit v1.1 ---
+// --- Cuts Layout Audit v1.2 ---
 (function () {
   var IS_PROBE = location.hash.indexOf('__audit-probe') !== -1;
   var ACTIVE = IS_PROBE
@@ -688,6 +688,66 @@ requestRender();
   if (!ACTIVE) return;
 
   var TOL = 1;
+
+  // --- Canvas text recorder (v1.2) ---
+  // Text painted into a canvas is invisible to getBoundingClientRect, so every DOM check below is
+  // blind to it: a node map can stack four labels on top of each other and audit clean. Hook
+  // fillText, keep the boxes from the last completed frame, and audit those. A page that paints
+  // no canvas text records nothing and is unaffected.
+  var canvasFrames = (window.WeakMap ? new WeakMap() : null);
+  function frameBucket(cv) {
+    if (!canvasFrames) return null;
+    var b = canvasFrames.get(cv);
+    if (!b) { b = { open: [], last: null }; canvasFrames.set(cv, b); }
+    return b;
+  }
+  function recordCanvasText(cx, text, x, y) {
+    var s = String(text == null ? '' : text); if (!s.trim()) return;
+    var cv = cx.canvas; if (!cv || !cv.getBoundingClientRect) return;
+    var b = frameBucket(cv); if (!b || b.open.length > 400) return;
+    var r = cv.getBoundingClientRect(); if (!r.width || !cv.width) return;
+    var m = cx.measureText(s), w = m.width;
+    var asc = (m.actualBoundingBoxAscent != null) ? m.actualBoundingBoxAscent : 0;
+    var desc = (m.actualBoundingBoxDescent != null) ? m.actualBoundingBoxDescent : 0;
+    if (!asc && !desc) {
+      // parse the SIZE out of the font shorthand, never parseInt (that returns the weight)
+      var fs = parseFloat((/(\d+(?:\.\d+)?)px/.exec(cx.font) || [0, 12])[1]) || 12;
+      asc = fs * 0.8; desc = fs * 0.25;
+    }
+    var x0 = x;
+    if (cx.textAlign === 'center') x0 = x - w / 2;
+    else if (cx.textAlign === 'right' || cx.textAlign === 'end') x0 = x - w;
+    var y0 = y - asc, y1 = y + desc, bl = cx.textBaseline;
+    if (bl === 'top' || bl === 'hanging') { y0 = y; y1 = y + asc + desc; }
+    else if (bl === 'middle') { y0 = y - (asc + desc) / 2; y1 = y0 + asc + desc; }
+    else if (bl === 'bottom' || bl === 'ideographic') { y0 = y - asc - desc; y1 = y; }
+    var t = cx.getTransform ? cx.getTransform() : null;
+    var map = function (px, py) { return t ? { x: t.a * px + t.c * py + t.e, y: t.b * px + t.d * py + t.f } : { x: px, y: py }; };
+    var k = (cv.width / r.width) || 1;                    // user space -> device px -> css px
+    var A = map(x0, y0), B = map(x0 + w, y1);
+    b.open.push({ t: s.slice(0, 40),
+      x0: Math.min(A.x, B.x) / k, y0: Math.min(A.y, B.y) / k,
+      x1: Math.max(A.x, B.x) / k, y1: Math.max(A.y, B.y) / k });
+  }
+  var CTX2D = window.CanvasRenderingContext2D;
+  if (CTX2D && CTX2D.prototype && !CTX2D.prototype.__cutsAuditHooked && canvasFrames) {
+    CTX2D.prototype.__cutsAuditHooked = true;
+    var _fillText = CTX2D.prototype.fillText, _clearRect = CTX2D.prototype.clearRect;
+    CTX2D.prototype.fillText = function (text, x, y) {
+      try { recordCanvasText(this, text, x, y); } catch (e) {}
+      return _fillText.apply(this, arguments);
+    };
+    CTX2D.prototype.clearRect = function (x, y, w, h) {
+      try {
+        var cv = this.canvas, b = frameBucket(cv);
+        var t = this.getTransform ? this.getTransform() : null;
+        var sx = t ? (Math.abs(t.a) || 1) : 1, sy = t ? (Math.abs(t.d) || 1) : 1;
+        // a clear covering most of the surface means a new frame is starting
+        if (b && w * sx >= cv.width * 0.9 && h * sy >= cv.height * 0.9) { b.last = b.open; b.open = []; }
+      } catch (e) {}
+      return _clearRect.apply(this, arguments);
+    };
+  }
 
   // --- WCAG color-contrast helpers (v1.1) ---
   function parseColor(s) {
@@ -801,6 +861,55 @@ requestRender();
       findings.push({ kind: 'low-contrast', severity: 'warning', selector: c.selector, px: 0,
         note: c.ratio.toFixed(2) + ':1 < ' + c.thr + ':1 (' + (c.large ? 'large' : 'normal') + ' text)' + (c.count > 1 ? ' ·×' + c.count : '') });
     });
+    // --- Canvas text faults (v1.2) ---
+    var cvs = document.querySelectorAll('canvas');
+    for (var qi = 0; qi < cvs.length; qi++) {
+      var cv = cvs[qi];
+      if (cv.closest && cv.closest('[data-audit-ignore]')) continue;
+      var fb = canvasFrames && canvasFrames.get(cv); if (!fb) continue;
+      var L = (fb.last && fb.last.length ? fb.last : fb.open) || [];
+      if (L.length < 2) continue;
+      var cr = cv.getBoundingClientRect(); if (!cr.width) continue;
+      // Positioned elements painted on top of the canvas: a legend, a hint line, a control cluster.
+      var ovs = [], sibs = cv.parentElement ? cv.parentElement.querySelectorAll('*') : [];
+      for (var oi = 0; oi < sibs.length; oi++) {
+        var ov = sibs[oi]; if (ov === cv) continue;
+        if (ov.closest('#cuts-layout-audit, #cuts-audit-probe, [data-audit-ignore]')) continue;
+        var ocs = getComputedStyle(ov);
+        if (ocs.position !== 'absolute' && ocs.position !== 'fixed') continue;
+        if (ocs.display === 'none' || ocs.visibility === 'hidden' || parseFloat(ocs.opacity) === 0) continue;
+        if (!ov.textContent || !ov.textContent.trim()) continue;
+        var orr = ov.getBoundingClientRect(); if (!orr.width || !orr.height) continue;
+        if (orr.right < cr.left || orr.left > cr.right || orr.bottom < cr.top || orr.top > cr.bottom) continue;
+        ovs.push({ el: ov, x0: orr.left - cr.left, y0: orr.top - cr.top, x1: orr.right - cr.left, y1: orr.bottom - cr.top });
+      }
+      var nOver = 0, nOut = 0, nCov = 0, firstPair = '', firstCov = '';
+      for (var ai = 0; ai < L.length; ai++) {
+        var A = L[ai];
+        if (A.x0 < -TOL || A.y0 < -TOL || A.x1 > cr.width + TOL || A.y1 > cr.height + TOL) nOut++;
+        for (var vi = 0; vi < ovs.length; vi++) {
+          var O = ovs[vi];
+          if (!(A.x1 < O.x0 || A.x0 > O.x1 || A.y1 < O.y0 || A.y0 > O.y1)) {
+            nCov++; if (!firstCov) firstCov = '"' + A.t + '" sits under ' + shortSelector(O.el); break;
+          }
+        }
+        for (var bi = ai + 1; bi < L.length; bi++) {
+          var B = L[bi];
+          // the same string at the same spot is a redraw, not a collision
+          if (A.t === B.t && Math.abs(A.x0 - B.x0) < 1 && Math.abs(A.y0 - B.y0) < 1) continue;
+          if (!(A.x1 < B.x0 || A.x0 > B.x1 || A.y1 < B.y0 || A.y0 > B.y1)) {
+            nOver++; if (!firstPair) firstPair = '"' + A.t + '" / "' + B.t + '"';
+          }
+        }
+      }
+      var csel = shortSelector(cv);
+      if (nOver) findings.push({ kind: 'canvas-text-overlap', severity: 'warning', selector: csel, px: nOver,
+        note: 'Canvas labels drawn over each other: ' + firstPair + (nOver > 1 ? ' ·×' + nOver : '') });
+      if (nOut) findings.push({ kind: 'canvas-text-outside', severity: 'warning', selector: csel, px: nOut,
+        note: nOut + ' canvas label' + (nOut > 1 ? 's run' : ' runs') + ' past the edge of the canvas.' });
+      if (nCov) findings.push({ kind: 'canvas-text-covered', severity: 'warning', selector: csel, px: nCov,
+        note: firstCov + (nCov > 1 ? ' ·×' + nCov : '') });
+    }
     return { width: widthLabel || (vw + 'px'), findings: findings.slice(0, 40), total: findings.length };
   }
 
@@ -880,7 +989,7 @@ requestRender();
   else window.addEventListener('load', function () { setTimeout(runMain, 80); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { setTimeout(function () { results.current = audit(window.innerWidth + 'px'); render(); }, 50); });
 })();
-// --- end Cuts Layout Audit v1.1 ---
+// --- end Cuts Layout Audit v1.2 ---
 </script>
 </body>
 </html>
