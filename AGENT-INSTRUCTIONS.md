@@ -40,6 +40,10 @@ var CONFIG = {
 ### CLUSTERS and ORDER
 Keep the `anchor` entry. Replace the rest with 2 to 6 groups that answer the question, each with a label, a distinct color, AND a distinct `shape` (circle, square, triangle, diamond, hexagon, star). The shape draws on the map and in the filter chips, so a color-blind reader can still tell groups apart. List every non-anchor key in `ORDER`; that sets the sectors around the hub.
 
+**Pick colors for the dots, not for the text.** A group color is a large shape on the map, so choose what reads well there. The engine runs every text use of that color through `readable()`, which darkens it just enough to clear WCAG AA (4.5:1) on the panel background and behind button labels, and leaves it alone when it already passes. Panel text and buttons stay legible whatever palette you pick, and the dots keep the color you chose. Do not pre-darken your palette to compensate; that only dulls the map.
+
+**Group labels name what the reader gets, not what you did.** "Start here", "Best practices", "Examples to try" tell someone where to go. "Miscellaneous", "Other", "Additional items" do not. One group may legitimately hold the long tail; the shipped map puts twelve of its twenty-three nodes in Additional resources, because splitting the tail into three thin groups made the reader choose between labels that meant nothing to them.
+
 ### SOURCES and SOURCE_LEGEND (a label, not a filter)
 When the map draws from more than one place (two apps, or an app plus the web), define `SOURCES` and give every node a `src` key. Source is labelling only: each node's panel shows a source badge, any source with a `ring` style ("solid", "dashed", or "dotted") wears that outline on its dot, and one legend line under the chips explains the rings. Nothing filters by it.
 
