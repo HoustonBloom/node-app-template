@@ -358,7 +358,10 @@ var ANCHOR = NODES.filter(function(n){ return n.cluster==="anchor"; })[0];
     group.forEach(function(n, j){
       n.li = j;
       var t = N>1 ? (j/(N-1) - 0.5) : 0;
-      var ring = (N>5) ? (j%2) : 0;
+      // Four or more on one arc puts four labels at the same height, and they stack straight
+      // down the canvas. Alternating rings from 4 up fans them apart before the label placer
+      // has to work at all.
+      var ring = (N>3) ? (j%2) : 0;
       var r = 0.27 + ring*0.13;
       var deg = centerDeg + t*spreadDeg;
       var rad = deg*Math.PI/180;
@@ -405,7 +408,20 @@ function atRest(){ return filter==="all"; }
 function baseR(d){ return d.cluster==="anchor" ? 28 : 13; }
 function nodeR(d){ return baseR(d)*clamp(cam.s,0.3,1.4)*anim.get(d.id).scale; }
 
-function resize(){ var rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1; canvas.width=Math.floor(rect.width*dpr); canvas.height=Math.floor(rect.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+// The hint line and the zoom column are HTML sitting on top of the canvas. Measure them once per
+// resize so labels can route around them instead of drawing underneath, and so the camera can
+// keep the map clear of the hint. Cached because this runs inside the draw loop.
+var OVERLAYS=[], CANVAS_H=0, BOTTOM_INSET=0;
+function measureOverlays(){
+  var cr=canvas.getBoundingClientRect(); CANVAS_H=cr.height; OVERLAYS=[];
+  [document.querySelector("#hint"), document.querySelector(".zoom")].forEach(function(el){
+    if(!el) return; var r=el.getBoundingClientRect();
+    OVERLAYS.push([r.left-cr.left-8, r.top-cr.top-8, r.right-cr.left+8, r.bottom-cr.top+8]);
+  });
+  var h=document.querySelector("#hint");
+  BOTTOM_INSET = h ? Math.round(h.getBoundingClientRect().height)+22 : 0;
+}
+function resize(){ var rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1; canvas.width=Math.floor(rect.width*dpr); canvas.height=Math.floor(rect.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); measureOverlays(); }
 // Frame an arbitrary set of nodes. opts.minSpan puts a floor under the bounding box: a node
 // with one neighbour spans almost nothing, and without a floor the scale pins to the cap and
 // pans off canvas. opts.maxScale caps how far a focus fit may zoom in. opts.boost overshoots
@@ -422,9 +438,12 @@ function fitTo(nodes, opts){
     if(maxY-minY<mh){ minY=cy-mh/2; maxY=cy+mh/2; }
   }
   var w=Math.max(maxX-minX,1), h=Math.max(maxY-minY,1);
-  cam.s=clamp(Math.min((rect.width-PAD*2-70)/w,(rect.height-PAD*2)/h)*(opts.boost||1), 0.3, opts.maxScale||3);
+  // 70 on the right clears the zoom column, BOTTOM_INSET clears the hint line. Fitting into what
+  // is left, and centring in it, is what keeps the lowest row of labels on the map.
+  var availH=Math.max(rect.height-PAD*2-BOTTOM_INSET,80);
+  cam.s=clamp(Math.min((rect.width-PAD*2-70)/w,availH/h)*(opts.boost||1), 0.3, opts.maxScale||3);
   cam.x=(rect.width-(minX+maxX)*cam.s)/2;
-  cam.y=(rect.height-(minY+maxY)*cam.s)/2;
+  cam.y=(rect.height-BOTTOM_INSET-(minY+maxY)*cam.s)/2;
 }
 // A filter can legitimately return a single node, so the filtered fit carries a span floor too.
 function fit(all){
@@ -451,8 +470,43 @@ function draw(){
   LINKS.forEach(function(l){ var a=l[0], b=l[1]; if(!vis.has(a)||!vis.has(b)) return; var da=byId.get(a), db=byId.get(b); var p1=toScreen.apply(null,wpos(da)), p2=toScreen.apply(null,wpos(db)); var hl=focus&&(a===focus||b===focus); var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2; var nx=-(p2[1]-p1[1]), ny=(p2[0]-p1[0]), len=Math.hypot(nx,ny)||1, bow=0.08*Math.hypot(p2[0]-p1[0],p2[1]-p1[1]); ctx.beginPath(); ctx.moveTo(p1[0],p1[1]); ctx.quadraticCurveTo(mx+nx/len*bow,my+ny/len*bow,p2[0],p2[1]); var other = da.id===ANCHOR.id?db:da; ctx.strokeStyle=C(other.cluster); ctx.globalAlpha = hl?0.85:(focus?0.06:0.30); ctx.lineWidth = hl?2:1.1; ctx.stroke(); });
   ctx.globalAlpha=1;
   visible().forEach(drawNode);
-  var fsz=clamp(9+7*cam.s,10,15); var drawn=[]; var order=visible().slice().sort(function(p,q){return prio(p,focus)-prio(q,focus);});
-  var noCull = !atRest(); order.forEach(function(d){ var a=anim.get(d.id); var must = noCull||d.id===focus||d.cluster==="anchor"||(focus&&neighbors.get(focus)&&neighbors.get(focus).has(d.id)); if(a.alpha<0.3&&!must) return; var sp=toScreen.apply(null,wpos(d)); var r=nodeR(d); var label=d.short||d.title; ctx.font=(d.cluster==="anchor"?700:600)+" "+(d.cluster==="anchor"?fsz+2:fsz)+"px -apple-system,'Segoe UI',Roboto,sans-serif"; var w=ctx.measureText(label).width; var x0=sp[0]-w/2-4, y0=sp[1]+r+5, x1=sp[0]+w/2+4, y1=y0+fsz+5; var hits=function(){return drawn.some(function(rc){return !(x1<rc[0]||x0>rc[2]||y1<rc[1]||y0>rc[3]);});}; if(noCull&&d.cluster!=="anchor"){ var g=0; while(g++<6&&hits()){ y0+=fsz+6; y1=y0+fsz+5; } } else if(!must && hits()) return; ctx.globalAlpha=clamp(a.alpha,0.3,1); ctx.lineWidth=3.5; ctx.strokeStyle=PAPER; ctx.lineJoin="round"; ctx.textAlign="center"; ctx.textBaseline="top"; ctx.strokeText(label,sp[0],y0); ctx.fillStyle="#2a2620"; ctx.fillText(label,sp[0],y0); ctx.globalAlpha=1; drawn.push([x0,y0,x1,y1]); });
+  var fsz=clamp(9+7*cam.s,10,15); var drawn=OVERLAYS.slice(); var order=visible().slice().sort(function(p,q){return prio(p,focus)-prio(q,focus);});
+  var noCull = !atRest();
+  order.forEach(function(d){
+    var a=anim.get(d.id);
+    var must = noCull||d.id===focus||d.cluster==="anchor"||(focus&&neighbors.get(focus)&&neighbors.get(focus).has(d.id));
+    if(a.alpha<0.3&&!must) return;
+    var sp=toScreen.apply(null,wpos(d)), r=nodeR(d), label=d.short||d.title;
+    ctx.font=(d.cluster==="anchor"?700:600)+" "+(d.cluster==="anchor"?fsz+2:fsz)+"px -apple-system,'Segoe UI',Roboto,sans-serif";
+    var w=ctx.measureText(label).width, lh=fsz+5;
+    var x0=sp[0]-w/2-4, x1=sp[0]+w/2+4;
+    // A slot is free when it clears every label already placed, both overlay boxes, and the
+    // canvas edges. drawn is seeded with the overlays, so one test covers all three.
+    var free=function(ty0){
+      var ty1=ty0+lh;
+      if(ty0<2 || ty1>CANVAS_H-2) return false;
+      return !drawn.some(function(rc){ return !(x1<rc[0]||x0>rc[2]||ty1<rc[1]||ty0>rc[3]); });
+    };
+    var below=sp[1]+r+5, above=sp[1]-r-5-lh, step=lh+1, y0=null;
+    if(must||noCull){
+      // Alternate below and above before marching away from the dot. A row of dots used to become
+      // a column of labels walking off the bottom of the map.
+      var cands=[below,above];
+      for(var g=1;g<=4;g++){ cands.push(below+g*step); cands.push(above-g*step); }
+      for(var ci=0;ci<cands.length;ci++){ if(free(cands[ci])){ y0=cands[ci]; break; } }
+      // Nowhere to put it. On a small screen showing every node at once that happens, and a pile
+      // of stacked labels is worse than a missing one. The dot being looked at always keeps its
+      // label; the rest drop out until there is room.
+      if(y0===null){ if(d.id===focus||d.cluster==="anchor") y0=below; else return; }
+    } else {
+      if(!free(below)) return;
+      y0=below;
+    }
+    ctx.globalAlpha=clamp(a.alpha,0.3,1); ctx.lineWidth=3.5; ctx.strokeStyle=PAPER; ctx.lineJoin="round";
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    ctx.strokeText(label,sp[0],y0); ctx.fillStyle="#2a2620"; ctx.fillText(label,sp[0],y0);
+    ctx.globalAlpha=1; drawn.push([x0,y0,x1,y0+lh]);
+  });
 }
 function drawNode(d){ var a=anim.get(d.id); var sp=toScreen.apply(null,wpos(d)); var r=nodeR(d); var color=C(d.cluster); var shape=d.cluster==="anchor"?"circle":clusterShape(d.cluster); var puff=Math.max(2.5,r*0.38); ctx.globalAlpha=a.alpha;
   traceShape(shape,sp[0],sp[1]+2,r); ctx.fillStyle="rgba(42,38,32,0.10)"; ctx.fill();
