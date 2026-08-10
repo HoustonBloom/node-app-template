@@ -1,21 +1,28 @@
 # Agent Instructions · Node App Template
 
-Written for your AI assistant. If a human is skimming: the part worth your eyes is rule 4 of the contract, on people and privacy.
+Written for your AI assistant. If a human is skimming: the part worth your eyes is rule 5 of the contract, on people and privacy.
 
 You are populating a self-contained HTML node map for a person who is not technical. Read this whole file before touching the template.
 
 ## What you are building
 
-`node-app-template.html` is a single-file interactive map: a hub question at the center, items from the person's connected app arranged around it in colored groups, every item clickable. Clicking a node fills the side panel with the item's name, where it came from, one or two sentences on why it is on the map, and a button that opens the real thing. Filter chips isolate one group at a time. Pan, zoom, hover dimming, and mobile layout are already built.
+`node-app-template.html` is a single-file interactive map: a hub question at the center, items from the person's connected app arranged around it in colored groups, every item clickable.
 
-Your job is content only. The engine does the rest.
+Your job is content only. The engine does the rest, and because every map you build is a copy of this file, every map you build inherits all of it. You do not implement any of the following, and you do not remove any of it:
+
+- **Tap a node and the view follows it.** The camera reframes to hold that node and everything it connects to, the node and its connections stay lit, and everything else fades back. Tapping the hub frames the whole map, so the hub is also the way back out. Tapping the background, or pressing Escape, returns to the resting view.
+- **A selection outranks the filters.** With a group or source filter on, selecting a node pulls its connections back on screen even when the filter excluded them, so a person never sees a node with half its relationships hidden.
+- **The panel lists real connections.** Each node's panel shows "Connected to" (the actual links you declared in `EXTRA_LINKS`) and "Same group" (its cluster siblings). Both lists are clickable and move the map.
+- **Filters explain themselves.** Turn on a filter with nothing selected and the panel names the filter, counts what is in it, lists every item, and offers a way back to the whole map.
+- **The rest.** Radial layout, pan, drag, scroll zoom, zoom buttons, hover dimming, label collision avoidance, clipboard copy for prompts, phone layout, and the layout audit at the bottom of the file.
 
 ## The contract
 
-1. **Copy the template to a new file. Never modify `node-app-template.html` itself, for any reason.** The template ships as a getting-started map, and that content is the person's permanent guide to this whole system. Every map you build is a copy. Name the copy after the question, kebab-case: `recipes-for-a-crowd.html`. Save it in the same folder unless the person says otherwise. If the person asks you to "update" or "fix" the template, confirm they mean a copy first. One maintainer exception: whoever publishes this template may set `templateRepo` in CONFIG and delete that node's placeholder note line. That is the only sanctioned edit to the template file.
-2. **Edit only SECTION 1** (marked `SECTION 1 · YOUR CONTENT` in the file). Everything below the `SECTION 2 · ENGINE` marker, including the layout audit block at the bottom, stays byte-identical.
-3. **Every node must be real.** Each node comes from something you found in the person's connected app. Never invent items, counts, dates, or links. If a field is unknown, omit it.
-4. **People are sensitive data.** If nodes are people, include only people the person asked for, and put nothing in a panel the person would not show on a shared screen. When in doubt, ask before writing.
+1. **Copy the template to a new file. Never modify `node-app-template.html` itself, for any reason.** The template ships as a getting-started map, and that content is the person's permanent guide to this whole system. Every map you build is a copy. If the person asks you to "update" or "fix" the template, confirm they mean a copy first. One maintainer exception: whoever publishes this template may set `templateRepo` in CONFIG and delete that node's placeholder note line. That is the only sanctioned edit to the template file.
+2. **Save the copy next to the template, at the top level of this folder.** Same folder as `node-app-template.html` and this file, not a subfolder, not a scratch directory, not somewhere else on the person's disk. Name it after the question in kebab-case: `recipes-for-a-crowd.html`. The person opens their maps by double-clicking them, so every map they own sits in one place they already know. Put it elsewhere only if the person names the place. When you hand the map back, say where it is by folder and file name.
+3. **Edit only SECTION 1** (marked `SECTION 1 · YOUR CONTENT` in the file). Everything below the `SECTION 2 · ENGINE` marker, including the layout audit block at the bottom, stays byte-identical. That block is what gives your map the behavior described above. Copying the file is the whole inheritance mechanism: nothing to install, nothing to wire up, and nothing to delete because it looks unused.
+4. **Every node must be real.** Each node comes from something you found in the person's connected app. Never invent items, counts, dates, or links. If a field is unknown, omit it.
+5. **People are sensitive data.** If nodes are people, include only people the person asked for, and put nothing in a panel the person would not show on a shared screen. When in doubt, ask before writing.
 
 ## What to replace in SECTION 1
 
@@ -60,6 +67,10 @@ Layout is computed automatically from `cluster` membership. Do not add `x`/`y`.
 ### EXTRA_LINKS
 Every node is linked to the hub automatically. Add `["idA","idB"]` pairs only for real relationships between items worth showing.
 
+This field carries more weight than its size suggests. A pair here does three things at once: it draws an edge on the map, it fills the "Connected to" list in both nodes' panels, and it widens the camera when either node is selected, since the view reframes to hold a node and everything it connects to. A map with no pairs still works, but every node reads as an island and selecting one just zooms to it and the hub.
+
+So: walk the items once, ask which ones genuinely relate, and write those pairs. Two items by the same author, a document and the thread that produced it, a tool and the guide that explains it. Do not pair items merely because they share a group, since "Same group" already covers that, and do not manufacture pairs to make the map look busy. A relationship you cannot state in a sentence is not one.
+
 ## Quality bar
 
 - **15 to 40 nodes.** Curate. If the app has 300 candidates, pick the ones that best answer the question and say in the subtitle what you scoped to.
@@ -81,6 +92,7 @@ Build in ONE pass: read the source app once, curate, write the file, then run th
 1. Open the new file in a browser from disk (double-click or `file://`).
 2. The built-in layout audit runs automatically on `file://` and shows a red or amber pill bottom-left if the layout breaks, including at phone width. No pill means clean. Fix anything it flags.
 3. Click the hub, one node per group, and one filter chip. Confirm every `href` opens the right thing and every button label says what the reader gets.
-4. Read the panels once as a stranger: any number you did not count, any claim you did not see in the source, any name the person might not want on a shared screen comes out now.
-5. Tell the person the file name, the node count, and what you scoped out, in plain sentences.
-6. If the person asks for changes, edit the same map file in place; do not rebuild from scratch and do not touch the template.
+4. Click a node that has an `EXTRA_LINKS` pair. The camera should reframe to hold it and its connections, and "Connected to" should list them. Click the background to come back out. If a panel shows no "Connected to" section anywhere in the map, you wrote no pairs; go back and ask whether that is true.
+5. Read the panels once as a stranger: any number you did not count, any claim you did not see in the source, any name the person might not want on a shared screen comes out now.
+6. Tell the person where the file is (folder and file name), the node count, and what you scoped out, in plain sentences. Say that it opens by double-clicking, and that it sits next to the getting-started map with any others they have made.
+7. If the person asks for changes, edit the same map file in place; do not rebuild from scratch and do not touch the template.

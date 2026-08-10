@@ -1,6 +1,8 @@
 # Node App Template
 
-A map of your stuff, drawn as a web of connected dots. You pick a question, your AI assistant fills the map from one of your apps, and you get a single file you can open, explore, and share. Click any dot and a panel slides in with the story: what it is, why it is on the map, and a button to open the real thing.
+A map of your stuff, drawn as a web of connected dots. You pick a question, your AI assistant fills the map from one of your apps, and you get a single file you can open, explore, and share.
+
+Tap any dot and two things happen. A panel slides in with the story: what it is, why it is on the map, what it connects to, and a button to open the real thing. And the map itself moves, pulling back to hold that dot and everything joined to it while the rest fades. Tap the middle dot to see the whole map again, or tap the background to come back out.
 
 The map itself is one HTML file: no coding, nothing to install, no account. The assistant that builds it is the one thing you set up.
 
@@ -9,6 +11,8 @@ The map itself is one HTML file: no coding, nothing to install, no account. The 
 Double-click `node-app-template.html`. What opens is the guide: a starter map whose dots teach you how to use the template itself. Where to download the app, what you can connect, prompts worth copying, articles worth reading, all with links to real sources. Drag to move, scroll to zoom, tap a dot, try the filter buttons.
 
 This starter map never goes away. When your assistant builds your maps, it copies the template and fills in the copy. The original stays in the folder as your permanent reference.
+
+Every map your assistant makes lands right here too, in this same folder, next to the template. That is the rule the instructions give it. So this folder becomes the shelf your maps live on: one place, all double-clickable, no hunting. Anything the starter map does, your maps do, because each one is a copy of it.
 
 One housekeeping note: if this folder arrived as a .zip, extract it before anything else. Maps built inside an unextracted zip get lost.
 
@@ -69,6 +73,7 @@ The map is a plain file on your computer. Nothing in it goes online by itself. B
 | `AGENT-INSTRUCTIONS.md` | Instructions written for your AI assistant. You never need to read it, but you can. |
 | `README.md` | This file. |
 | `LICENSE` | MIT. Copy it, adapt it, share it. |
+| your maps | Everything your assistant builds arrives here as its own `.html`, named after the question it answers. |
 
 ## Where this came from
 

@@ -82,6 +82,7 @@
   .p-related li:first-child{ border-top:none }
   .p-related li:hover{ color:var(--ink) }
   .p-related .rdot{ width:9px; height:9px; border-radius:50%; flex:0 0 9px }
+  .p-related .rgrp{ margin-left:auto; padding-left:10px; color:var(--ink-faint); font-size:11px; white-space:nowrap }
 
   @media (max-width:820px){
     h1{ font-size:23px }
@@ -251,19 +252,19 @@ var NODES = [
   // ===== Use cases to steal =====
   { id:"my-work", cluster:"ideas", src:"folder", title:"How does this connect to my work?", short:"My work map",
     sub:"Works with any connector you have",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. First ask me to describe my work in a few sentences, and make that the hub. Then go through my [app] and build me a version of node-app-template.html answering: how does what I have saved connect to my work? Group items by the part of my work they touch, write each node's explanation as the specific connection, and link every node to its source. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: change the app or the grouping to fit.",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. First ask me to describe my work in a few sentences, and make that the hub. Then go through my [app] and build me a version of node-app-template.html answering: how does what I have saved connect to my work? Group items by the part of my work they touch, write each node's explanation as the specific connection, and link every node to its source. Save the map as a new file in this folder, next to the template, named after the question. Leave node-app-template.html untouched. This prompt is one specific recipe: change the app or the grouping to fit.",
     rel:"The anchor does not have to be a question. Make it your work: your project, practice, or program, described in a few sentences. Then everything you have saved gets read against it, and each dot answers one thing: what this has to do with what you are building." },
   { id:"collaborators", cluster:"ideas", src:"folder", title:"Keep up with your collaborators", short:"Collaborator map",
     sub:"Needs: an email connector (Gmail, in Claude or ChatGPT)",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then look through my email from the last [three months] and build me a version of node-app-template.html mapping the people and organizations active around [my project], grouped by what each is working on with me. Note each person's last thread and when it happened. Include only people I would be comfortable showing on a shared screen. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: change the time window, the project, or the grouping to fit.",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then look through my email from the last [three months] and build me a version of node-app-template.html mapping the people and organizations active around [my project], grouped by what each is working on with me. Note each person's last thread and when it happened. Include only people I would be comfortable showing on a shared screen. Save the map as a new file in this folder, next to the template, named after the question. Leave node-app-template.html untouched. This prompt is one specific recipe: change the time window, the project, or the grouping to fit.",
     rel:"The workflow this template grew out of: one inbox, drawn as the network of collaborators around the work. Rebuild it every few weeks and it shows who went quiet, which threads deserve a reply, and who keeps showing up." },
   { id:"drive-synthesis", cluster:"ideas", src:"folder", title:"Synthesize a Drive folder of research", short:"Research synthesis",
     sub:"Needs: the Google Drive connector",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my Google Drive folder [folder name] and build me a version of node-app-template.html answering: what does this library already say about [my question]? Group documents by theme, give each node one or two sentences on what that document contributes, and link every node to its file in Drive. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: swap the folder, the question, or the grouping to fit.",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then go through my Google Drive folder [folder name] and build me a version of node-app-template.html answering: what does this library already say about [my question]? Group documents by theme, give each node one or two sentences on what that document contributes, and link every node to its file in Drive. Save the map as a new file in this folder, next to the template, named after the question. Leave node-app-template.html untouched. This prompt is one specific recipe: swap the folder, the question, or the grouping to fit.",
     rel:"A folder of collected PDFs and docs becomes a readable answer: what we already have, and how it hangs together. Every dot opens the real document, so the map doubles as the folder's front door." },
   { id:"community-links", cluster:"ideas", src:"folder", title:"Surface what your community is saving", short:"Community links",
     sub:"Needs: a bookmarking or feed connector (Pinboard, RSS)",
-    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.",
+    prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder, next to the template, named after the question. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.",
     note:"Pinboard and most feeds arrive as custom connectors; the how-to lives under What you can connect.",
     rel:"Bookmarks are a quiet signal: what the people around you find worth keeping. Point this at a shared tag or feed and the community's reading becomes a picture you can talk about together." },
 
@@ -379,13 +380,49 @@ var C=function(cat){ return (CLUSTERS[cat]||{color:"#8a8275"}).color; };
 function activeFocus(){ return hoverId || selectedId; }
 function matchSrc(d){ return srcFilter==="all" || d.cluster==="anchor" || d.src===srcFilter; }
 function matchGroup(d){ return filter==="all" || d.cluster===filter || d.cluster==="anchor"; }
-function visible(){ return NODES.filter(function(d){ return matchSrc(d) && matchGroup(d); }); }
+// A focused node owns the view: its whole neighbourhood stays on screen and lit even when a
+// filter is on, so tapping a node reveals every connection it has, not just same-group ones.
+function focusNeighborhood(id){
+  var fid = id || hoverId || selectedId; if(!fid || !byId.get(fid)) return null;
+  return new Set([fid].concat(Array.from(neighbors.get(fid)||[])));
+}
+function visible(){
+  var base = NODES.filter(function(d){ return matchSrc(d) && matchGroup(d); });
+  var nb = focusNeighborhood(); if(!nb) return base;
+  var seen={}; base.forEach(function(d){ seen[d.id]=1; });
+  return base.concat(NODES.filter(function(d){ return !seen[d.id] && nb.has(d.id); }));
+}
 function atRest(){ return filter==="all" && srcFilter==="all"; }
 function baseR(d){ return d.cluster==="anchor" ? 28 : 13; }
 function nodeR(d){ return baseR(d)*clamp(cam.s,0.3,1.4)*anim.get(d.id).scale; }
 
 function resize(){ var rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1; canvas.width=Math.floor(rect.width*dpr); canvas.height=Math.floor(rect.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
-function fit(all){ var rect=canvas.getBoundingClientRect(); var nodes=all?NODES:visible(); if(!all&&filter!=="all"){ var grp=nodes.filter(function(d){return d.cluster!=="anchor";}); if(grp.length) nodes=grp; } if(!nodes.length) return; var xs=nodes.map(function(d){return d.x*VW;}), ys=nodes.map(function(d){return d.y*VH;}); var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs), minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys)+24; var w=Math.max(maxX-minX,1), h=Math.max(maxY-minY,1); cam.s=clamp(Math.min((rect.width-PAD*2-70)/w,(rect.height-PAD*2)/h),0.3,3); cam.x=(rect.width-(minX+maxX)*cam.s)/2; cam.y=(rect.height-(minY+maxY)*cam.s)/2; }
+// Frame an arbitrary set of nodes. opts.minSpan puts a floor under the bounding box: a node
+// with one neighbour spans almost nothing, and without a floor the scale pins to the cap and
+// pans off canvas. opts.maxScale caps how far a focus fit may zoom in. opts.boost overshoots
+// an exact fit so a small set fills the frame instead of sitting in the middle of it.
+function fitTo(nodes, opts){
+  var rect=canvas.getBoundingClientRect(); if(!nodes||!nodes.length) return;
+  opts = opts || {};
+  var xs=nodes.map(function(d){return d.x*VW;}), ys=nodes.map(function(d){return d.y*VH;});
+  var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs);
+  var minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys)+24;
+  if(opts.minSpan){
+    var cx=(minX+maxX)/2, cy=(minY+maxY)/2, mw=opts.minSpan, mh=opts.minSpan*(VH/VW);
+    if(maxX-minX<mw){ minX=cx-mw/2; maxX=cx+mw/2; }
+    if(maxY-minY<mh){ minY=cy-mh/2; maxY=cy+mh/2; }
+  }
+  var w=Math.max(maxX-minX,1), h=Math.max(maxY-minY,1);
+  cam.s=clamp(Math.min((rect.width-PAD*2-70)/w,(rect.height-PAD*2)/h)*(opts.boost||1), 0.3, opts.maxScale||3);
+  cam.x=(rect.width-(minX+maxX)*cam.s)/2;
+  cam.y=(rect.height-(minY+maxY)*cam.s)/2;
+}
+// A filter can legitimately return a single node, so the filtered fit carries a span floor too.
+function fit(all){
+  var nodes=all?NODES:visible();
+  if(!all&&filter!=="all"){ var grp=nodes.filter(function(d){return d.cluster!=="anchor";}); if(grp.length) nodes=grp; }
+  fitTo(nodes, all?null:{ minSpan:0.42*VW, maxScale:1.5, boost:1.06 });
+}
 
 function requestRender(){ draw(); if(!raf){ lastT=performance.now(); raf=requestAnimationFrame(tick); } clearTimeout(fallbackT); fallbackT=setTimeout(settleNow,240); }
 function targetsFor(d,fs){ return { scale: d.id===hoverId?1.3:d.id===selectedId?1.14:(fs&&fs.has(d.id)?1.05:1), alpha: fs?(fs.has(d.id)?1:0.13):1 }; }
@@ -427,7 +464,51 @@ function renderSrcChips(){ if(!HAS_SOURCES) return; srcChipsEl.replaceChildren()
 function renderChips(){ chipsEl.replaceChildren();
   chipsEl.append(chip("chip","All",null,countGroup("all"), filter==="all", function(){ filter="all"; onFilterChange(); }));
   ORDER.forEach(function(c){ chipsEl.append(chip("chip",CLUSTERS[c].label,shapeSVG(clusterShape(c),CLUSTERS[c].color),countGroup(c), filter===c, function(){ filter=c; onFilterChange(); })); }); }
-function onFilterChange(){ selectedId=null; hoverId=null; renderPanel(ANCHOR); renderSrcChips(); renderChips(); fit(atRest()); requestRender(); }
+function onFilterChange(){
+  selectedId=null; hoverId=null; renderSrcChips(); renderChips(); renderRestingPanel(); fit(atRest()); requestRender();
+  // On a phone the chips sit above the fold and the canvas does not, so a tap would otherwise
+  // change something the person cannot see.
+  if(window.innerWidth<=820){ var mp=document.querySelector(".map-wrap"); if(mp) mp.scrollIntoView({behavior:"smooth",block:"start"}); }
+}
+
+// Every node links to the hub, so naming the hub in a connections list says nothing. Real
+// relationships are the EXTRA_LINKS pairs.
+function linkedTo(d){
+  return Array.from(neighbors.get(d.id)||[]).filter(function(id){ return id!==ANCHOR.id; })
+    .map(function(id){ return byId.get(id); }).filter(Boolean);
+}
+function relatedList(head, items, withGroup){
+  if(!items.length) return "";
+  return '<div class="p-related"><p class="rh">'+head+' ('+items.length+')</p><ul>'+items.map(function(s){
+    return '<li data-id="'+s.id+'">'+shapeSVG(clusterShape(s.cluster),C(s.cluster))+esc(s.short||s.title)+
+      ((withGroup&&CLUSTERS[s.cluster])?'<small class="rgrp">'+esc(CLUSTERS[s.cluster].label)+'</small>':"")+'</li>';
+  }).join("")+'</ul></div>';
+}
+function bindPanelList(){ detailEl.querySelectorAll(".p-related li").forEach(function(el){ el.onclick=function(){ select(el.dataset.id); }; }); }
+
+function renderRestingPanel(){ if(atRest()) renderPanel(ANCHOR); else renderFilterOverview(); }
+// With a filter on and nothing selected, the panel says what the filter holds and lists it,
+// rather than repeating the hub. Built from the content section, so it needs no written copy.
+function renderFilterOverview(){
+  var items = NODES.filter(function(d){ return d.cluster!=="anchor" && matchSrc(d) && matchGroup(d); });
+  var total = NODES.filter(function(d){ return d.cluster!=="anchor"; }).length;
+  var grp = (filter!=="all" && CLUSTERS[filter]) ? CLUSTERS[filter] : null;
+  var src = (HAS_SOURCES && srcFilter!=="all" && SOURCES[srcFilter]) ? SOURCES[srcFilter] : null;
+  var color = grp ? grp.color : "#8a8275";
+  detailEl.innerHTML =
+    '<p class="p-kicker" style="color:'+color+'">Filter</p>'+
+    '<h2 class="p-title">'+esc(grp ? grp.label : (src ? src.label : "Filtered view"))+'</h2>'+
+    ((grp&&src) ? '<p class="p-source">'+esc(src.label)+' only</p>' : "")+
+    '<div class="p-divider"></div>'+
+    '<p class="p-lead">What is in this filter</p>'+
+    '<p class="p-rel">'+items.length+' of '+total+' items. Tap one on the map or in the list to read why it is here.</p>'+
+    relatedList(grp?"In this group":"In this filter", items, !grp)+
+    '<button type="button" class="p-btn ghost p-clear">Show the whole map</button>';
+  bindPanelList();
+  var clr=detailEl.querySelector(".p-clear");
+  if(clr) clr.onclick=function(){ filter="all"; srcFilter="all"; onFilterChange(); };
+  var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0;
+}
 
 function renderPanel(d){
   if(!d) return;
@@ -445,7 +526,7 @@ function renderPanel(d){
     var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0; return;
   }
   var sibs = NODES.filter(function(n){ return n.cluster===d.cluster && n.id!==d.id; });
-  var relatedHtml = sibs.length ? '<div class="p-related"><p class="rh">Same group ('+sibs.length+')</p><ul>'+sibs.map(function(s){ return '<li data-id="'+s.id+'">'+shapeSVG(clusterShape(s.cluster),C(s.cluster))+esc(s.short||s.title)+'</li>'; }).join("")+'</ul></div>' : "";
+  var relatedHtml = relatedList("Connected to", linkedTo(d), true) + relatedList("Same group", sibs, false);
   var srcBadge = (HAS_SOURCES && d.src && SOURCES[d.src]) ? '<span class="p-src-badge">'+esc(SOURCES[d.src].label)+'</span>' : "";
   var promptHtml = d.prompt ? '<div class="p-prompt"><p class="pp-head"><span>Copy this prompt &middot; yours to edit</span><button type="button" class="p-copy" style="background:'+color+'">Copy prompt</button></p><pre class="pp-text">'+esc(d.prompt).replace(/\[([^\]]+)\]/g,'<span class="pp-fill">[$1]</span>')+'</pre></div>' : "";
   detailEl.innerHTML =
@@ -463,7 +544,7 @@ function renderPanel(d){
     ((d.next && byId.get(d.next.id)) ? '<button type="button" class="p-btn ghost p-next">'+esc(d.next.label||"Next")+' &rarr;</button>' : "")+
     relatedHtml+
     (d.note ? '<p class="p-note">'+esc(d.note)+'</p>' : "");
-  detailEl.querySelectorAll(".p-related li").forEach(function(el){ el.onclick=function(){ select(el.dataset.id); }; });
+  bindPanelList();
   var nextBtn = detailEl.querySelector(".p-next");
   if(nextBtn) nextBtn.onclick = function(){ jumpTo(d.next.id); };
   var copyBtn = detailEl.querySelector(".p-copy");
@@ -493,8 +574,21 @@ function copyText(text, btn){
 }
 
 function jumpTo(id){ var t=byId.get(id); if(!t) return; if(!(matchSrc(t)&&matchGroup(t))){ filter="all"; srcFilter="all"; renderSrcChips(); renderChips(); fit(true); } selectedId=null; select(id); }
-function select(id){ if(id===selectedId) return deselect(); selectedId=id; renderPanel(byId.get(id)); if(window.innerWidth<=820){ var pn=document.querySelector("#panel"); if(pn) pn.scrollIntoView({behavior:"smooth",block:"start"}); } requestRender(); }
-function deselect(){ selectedId=null; renderPanel(ANCHOR); requestRender(); }
+// The one framing rule: with a node selected the camera holds that node and everything it
+// connects to; with nothing selected it holds whatever the filters left visible. Selecting the
+// hub frames the whole map, so the hub doubles as the way back out.
+function refit(){
+  var nb = selectedId ? focusNeighborhood(selectedId) : null;
+  if(nb) fitTo(NODES.filter(function(d){ return nb.has(d.id); }), { minSpan:0.46*VW, maxScale:1.45, boost:1.06 });
+  else fit(atRest());
+}
+function select(id){
+  if(id===selectedId) return deselect();
+  selectedId=id; renderPanel(byId.get(id)); refit();
+  if(window.innerWidth<=820){ var pn=document.querySelector("#panel"); if(pn) pn.scrollIntoView({behavior:"smooth",block:"start"}); }
+  requestRender();
+}
+function deselect(){ selectedId=null; renderRestingPanel(); fit(atRest()); requestRender(); }
 
 var down=null, moved=false;
 canvas.addEventListener("pointerdown",function(e){ down={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y}; moved=false; try{ canvas.setPointerCapture(e.pointerId); }catch(err){} });
@@ -506,8 +600,9 @@ canvas.addEventListener("wheel",function(e){ e.preventDefault(); var rect=canvas
 function zoomBy(f){ var rect=canvas.getBoundingClientRect(), px=rect.width/2, py=rect.height/2; var wx=(px-cam.x)/cam.s, wy=(py-cam.y)/cam.s; cam.s=clamp(cam.s*f,0.3,3); cam.x=px-wx*cam.s; cam.y=py-wy*cam.s; requestRender(); }
 document.querySelector("#zoomIn").onclick=function(){ zoomBy(1.25); };
 document.querySelector("#zoomOut").onclick=function(){ zoomBy(0.8); };
-document.querySelector("#zoomReset").onclick=function(){ fit(atRest()); requestRender(); };
-window.addEventListener("resize",function(){ resize(); fit(atRest()); requestRender(); });
+document.querySelector("#zoomReset").onclick=function(){ refit(); requestRender(); };
+window.addEventListener("resize",function(){ resize(); refit(); requestRender(); });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape" && selectedId) deselect(); });
 
 if(HAS_SOURCES){ srcRow.style.display=""; srcLegendEl.textContent=SOURCE_LEGEND; renderSrcChips(); }
 renderChips();
