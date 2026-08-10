@@ -213,13 +213,14 @@ var NODES = [
     links:[{label:"Connect apps in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/11487775-connectors-in-chatgpt"}],
     note:"Before your first connection, read the privacy dot under Go deeper.",
     rel:"In your assistant's settings, find connectors (ChatGPT calls them apps) and pick an app you already use. Once your assistant can see your bookmarks or your Drive, it has something real to map." },
-  { id:"get-template", cluster:"setup", src:"web", title:"Get your own copy of this template", short:"3 · Get the template",
-    sub:"GitHub · one folder, three files", href:CONFIG.templateRepo, linkLabel:"Get the template on GitHub &rarr;",
-    rel:"Everything lives in one folder: this template, the instructions your assistant reads, and a README. If someone showed you this map and you want your own, download the folder, keep it, and build every map from your copy." },
-  { id:"give-folder", cluster:"setup", src:"folder", title:"Hand your assistant this folder", short:"4 · Share this folder",
-    next:{ id:"question", label:"Next: make your first map" },
+  { id:"give-folder", cluster:"setup", src:"folder", title:"Hand your assistant this folder", short:"3 · Point your assistant",
+    next:{ id:"populate", label:"Next: populate the template" },
     sub:"The handoff that makes it work",
     rel:"Your assistant needs two things: this folder and a question. In Claude, open Cowork and choose this folder when it asks where to work; in ChatGPT's desktop app, start a Codex session and pick it. Every prompt on this map starts by telling the assistant to read AGENT-INSTRUCTIONS.md, and from there it knows which part of the template to fill in. You never touch the code." },
+  { id:"populate", cluster:"setup", src:"folder", title:"Fill the template with your own material", short:"4 · Fill the template",
+    next:{ id:"my-work", label:"See the worked examples" },
+    sub:"Where it stops being a demo",
+    rel:"Everything before this was setup. Now you say what you want to see, and your assistant reads your connected app and writes a copy of this template with your own material in it. Four worked examples sit under Use cases to steal, each one a full prompt with brackets marking what to change. Open whichever is closest to your question, copy it, edit the brackets. If you would rather write your own from scratch, the bare prompt is under Make your first map." },
 
   // ===== What you can connect =====
   { id:"directory", cluster:"connect", src:"official", title:"Browse the connectors directory", short:"App directory",
@@ -292,6 +293,9 @@ var NODES = [
 
 
   // ===== Additional resources =====
+  { id:"get-template", cluster:"resources", src:"web", title:"Get your own copy of this template", short:"Get the template",
+    sub:"GitHub · one folder, three files", href:CONFIG.templateRepo, linkLabel:"Get the template on GitHub &rarr;",
+    rel:"If you opened this map from a folder on your own computer, you already have it, and this dot is not for you. It is here for the other case: someone sent you a map they made, you liked it, and you want the thing that made it. One download, three files (this template, the instructions your assistant reads, and a README), and every map you build starts from your own copy." },
   { id:"cls", cluster:"resources", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
     sub:"Megan Ducote · two open-access papers",
     links:[
@@ -315,6 +319,8 @@ var NODES = [
 // Every node is already linked to the hub automatically; only add extras here.
 var EXTRA_LINKS = [
   ["connect-app","directory"],
+  ["populate","my-work"],
+  ["populate","prompt"],
   ["question","prompt"],
   ["prompt","keep"],
   ["privacy","connect-app"],
