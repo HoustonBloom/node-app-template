@@ -178,14 +178,13 @@ var CLUSTERS = {
   setup:    { label:"Start here",                color:"#3f8f5e", shape:"circle" },
   firstmap: { label:"Best practices",            color:"#c8902f", shape:"triangle" },
   ideas:    { label:"Examples to try",           color:"#8a5aa8", shape:"diamond" },
-  // A group may carry `subs`. When it is the active filter, its sub-groups appear as a second
-  // chip row, so a long tail stays browsable instead of becoming a wall of identical dots.
-  resources:{ label:"Additional resources",      color:"#9a3b52", shape:"star",
-    subs:{ connect:{label:"Apps to connect"}, next:{label:"Next steps"},
-           read:{label:"Worth reading"},      tools:{label:"More tools"} } }
+  connect:  { label:"Apps to connect",           color:"#4a5fc7", shape:"square" },
+  next:     { label:"Next steps",                color:"#b0642f", shape:"hexagon" },
+  read:     { label:"Worth reading",             color:"#2f7d8a", shape:"pentagon" },
+  tools:    { label:"More tools",                color:"#9a3b52", shape:"star" }
 };
 // Draw order of the sectors around the hub. List every cluster key except anchor.
-var ORDER = ["setup","firstmap","ideas","resources"];
+var ORDER = ["setup","firstmap","ideas","connect","next","read","tools"];
 
 // Data sources: an optional SECOND filter axis, independent of the groups above.
 // Use it when nodes come from more than one place (two different apps, or an app
@@ -216,7 +215,7 @@ var NODES = [
   { id:"hub", cluster:"anchor", title:"Using this template for your own work", short:"This template",
     sub:"Every link on this map checked July 2026",
     next:{ id:"download", label:"Start at step 1" },
-    rel:"This map is the guide, and it is also an example of what you are about to make. Start here runs in four numbered steps and ends at four examples you can copy. Best practices covers the prompt and what makes a map worth reading. Additional resources holds everything else: the apps you can connect, how to restyle and refresh a map, and where the idea came from. Nothing needs reading in order except those four steps." },
+    rel:"This map is the guide, and it is also an example of what you are about to make. Start here runs in four numbered steps and ends at four examples you can copy. Best practices covers the prompt and what makes a map worth reading. The rest are there when you want them: the apps you can connect, what to do after your first map, what is worth reading before you connect anything, and the tools this one came from. Nothing needs reading in order except those four steps." },
 
   // ===== Start here =====
   { id:"download", cluster:"setup", src:"official", title:"Download an AI desktop app", short:"1 · Get an AI app",
@@ -229,7 +228,7 @@ var NODES = [
     next:{ id:"give-folder", label:"Next: point your assistant here" },
     sub:"Official help centers · Claude and ChatGPT", href:"https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities", linkLabel:"Connect apps in Claude &rarr;",
     links:[{label:"Connect apps in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/11487775-connectors-in-chatgpt"}],
-    note:"Before your first connection, read the privacy dot under Additional resources.",
+    note:"Before your first connection, read the privacy dot under Worth reading.",
     rel:"In your assistant's settings, find connectors (ChatGPT calls them apps) and pick an app you already use. Once your assistant can see your bookmarks or your Drive, it has something real to map. The three dots this one connects to cover the specifics: the full directory of apps, the step by step for Gmail, Drive, and Calendar, and what to do when the directory does not have what you use." },
   { id:"give-folder", cluster:"setup", src:"folder", title:"Hand your assistant this folder", short:"3 · Point your assistant",
     next:{ id:"populate", label:"Next: populate the template" },
@@ -240,21 +239,21 @@ var NODES = [
     sub:"Where it stops being a demo",
     rel:"Everything before this was setup. Now you say what you want to see, and your assistant reads your connected app and writes a copy of this template with your own material in it. The four dots this one connects to are worked examples: a map of your own work, your collaborators, a research folder, what your community is saving. Each carries a full prompt with brackets marking what to change. Open whichever is closest to what you want, copy the prompt, edit the brackets. That is the whole job." },
 
-  // ===== Additional resources · what you can connect =====
-  { id:"directory", cluster:"resources", subgroup:"connect", src:"official", title:"Browse the connectors directory", short:"App directory",
+  // ===== Apps to connect =====
+  { id:"directory", cluster:"connect", src:"official", title:"Browse the connectors directory", short:"App directory",
     sub:"claude.com/connectors · chatgpt.com/apps", href:"https://claude.com/connectors", linkLabel:"Browse Claude's gallery &rarr;",
     links:[{label:"Browse ChatGPT's apps &rarr;", href:"https://chatgpt.com/apps"}],
     rel:"A large and growing set, browsable by what you want to do. If you use an app for work or life, look for it here: project boards, notes, mail, music. Claude and ChatGPT each keep their own gallery." },
-  { id:"gworkspace", cluster:"resources", subgroup:"connect", src:"official", title:"Gmail, Google Drive, and Calendar", short:"Google apps",
+  { id:"gworkspace", cluster:"connect", src:"official", title:"Gmail, Google Drive, and Calendar", short:"Google apps",
     sub:"Official help centers · step by step", href:"https://support.claude.com/en/articles/10166901-use-google-workspace-connectors", linkLabel:"Steps for Claude &rarr;",
     links:[{label:"Steps for ChatGPT &rarr;", href:"https://help.openai.com/en/articles/10408842-google-app-for-chatgpt-data-controls-faq"}],
     note:"Claude's Google connectors work on the free plan. ChatGPT's ship on paid plans.",
     rel:"The most common starting point. Each guide walks through connecting Gmail, Drive, and Calendar, and says plainly what your assistant can and cannot see once you do." },
-  { id:"custom", cluster:"resources", subgroup:"connect", src:"official", title:"Custom connectors, when you outgrow the directory", short:"Custom connectors",
+  { id:"custom", cluster:"connect", src:"official", title:"Custom connectors, when you outgrow the directory", short:"Custom connectors",
     sub:"Official help centers · power users", href:"https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp", linkLabel:"The how-to for Claude &rarr;",
     links:[{label:"The how-to for ChatGPT &rarr;", href:"https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt"}],
     note:"In ChatGPT this lives behind developer mode on paid plans. Claude's free plan allows one custom connector.",
-    rel:"Anything with a remote MCP server can plug in, even tools the directory does not list (MCP is the standard plug, explained further down the same group). Skip this on day one. It is here so you know the ceiling is high." },
+    rel:"Anything with a remote MCP server can plug in, even tools the directory does not list (MCP is the open standard these connections run on, the same plug the directory apps use). Skip this on day one. It is here so you know the ceiling is high." },
 
   // ===== Best practices =====
   { id:"question", cluster:"firstmap", src:"folder", title:"Pick one question", short:"One question",
@@ -284,37 +283,37 @@ var NODES = [
   { id:"community-links", cluster:"ideas", src:"folder", title:"Surface what your community is saving", short:"Community links",
     sub:"Needs: a bookmarking or feed connector (Pinboard, RSS)",
     prompt:"Read AGENT-INSTRUCTIONS.md in this folder. Then pull the recent links saved by [my community's Pinboard account, shared tag, or RSS feed] and build me a version of node-app-template.html answering: what is my community reading right now, and how does it relate to [our shared work]? Group links by theme, credit who saved each one, and link every node to the original. Save the map as a new file in this folder, next to the template, named after the question. Leave node-app-template.html untouched. This prompt is one specific recipe: point it at a different feed or question any time.",
-    note:"Pinboard and most feeds arrive as custom connectors; the how-to lives under Additional resources.",
+    note:"Pinboard and most feeds arrive as custom connectors; the how-to lives under Apps to connect.",
     rel:"Bookmarks are a quiet signal: what the people around you find worth keeping. Point this at a shared tag or feed and the community's reading becomes a picture you can talk about together." },
 
-  // ===== Additional resources · going deeper =====
-  { id:"restyle", cluster:"resources", subgroup:"next", src:"folder", title:"Make the map look like you", short:"Restyle it",
+  // ===== Next steps, and worth reading =====
+  { id:"restyle", cluster:"next", src:"folder", title:"Make the map look like you", short:"Restyle it",
     sub:"Colors, shapes, labels, title: all editable",
     prompt:"Open [my map file] and restyle it: change the group colors to [my palette], pick different shapes if any two read too alike, and rewrite the title and subtitle in my words. Edit that map file in place. Leave node-app-template.html untouched. This prompt is one specific recipe: name any look you want.",
     rel:"Every color, shape, group label, and title lives in a marked content section your assistant can edit. Ask for your palette and your words. The engine keeps working underneath." },
-  { id:"refresh", cluster:"resources", subgroup:"next", src:"folder", title:"Maps go stale. Make refresh a routine", short:"Refresh routine",
+  { id:"refresh", cluster:"next", src:"folder", title:"Maps go stale. Make refresh a routine", short:"Refresh routine",
     sub:"Same source, same question, on a schedule",
     href:"https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork", linkLabel:"Schedules in Claude &rarr;",
     links:[{label:"Tasks in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/10291617-tasks-in-chatgpt"}],
     note:"Schedules sit on paid plans in both. A routine that edits a file on your computer needs the desktop kind of scheduled task, not the cloud kind.",
     prompt:"Open [my map file] and refresh it from [the same app]: add what is new, drop what no longer belongs, and note in the subtitle when it was last refreshed. Edit that map file in place. Leave node-app-template.html untouched. If you can schedule tasks on this computer, set this refresh to repeat every [two weeks]. This prompt is one specific recipe: change what counts as stale to fit.",
     rel:"A map is a snapshot: true the day it is built, going stale the moment life moves. The fix is a routine. Both assistants can run one on a schedule (Claude calls them scheduled tasks, ChatGPT calls them tasks), so the refresh happens without you remembering it. The collaborator map is the one that earns a standing slot." },
-  { id:"share", cluster:"resources", subgroup:"next", src:"folder", title:"Share a map you made", short:"Share a map",
+  { id:"share", cluster:"next", src:"folder", title:"Share a map you made", short:"Share a map",
     sub:"One file · email it, Drive it, send it",
     rel:"A map is one file, so sharing is just sending it. Before you do, tap through the panels once and read them as the recipient will: every name, link, and note travels with the file." },
-  { id:"why-maps", cluster:"resources", subgroup:"read", src:"web", title:"Why a map beats a list", short:"Why maps work",
+  { id:"why-maps", cluster:"read", src:"web", title:"Why a map beats a list", short:"Why maps work",
     sub:"Eric J. Ma's blog · December 2020", href:"https://ericmjl.github.io/blog/2020/12/15/building-a-personal-knowledge-graph-on-obsidian/", linkLabel:"Read the essay &rarr;",
     rel:"Written about linked note-taking, but the argument is this template's argument: a graph externalizes how things relate in your head, and the surprising connections show up in the picture, not the list." },
-  { id:"privacy", cluster:"resources", subgroup:"read", src:"web", title:"Think before you click Allow", short:"Privacy first",
+  { id:"privacy", cluster:"read", src:"web", title:"Think before you click Allow", short:"Privacy first",
     sub:"TechCrunch · July 2025", href:"https://techcrunch.com/2025/07/19/for-privacy-and-security-think-twice-before-granting-ai-access-to-your-personal-data/", linkLabel:"Read it before you connect &rarr;",
     rel:"Connecting an app can hand over years of email and contacts in one click, often more than the feature needs. Read the permission screen. This is the article to read before your first connection, not after." },
 
 
-  // ===== Additional resources · the wider system =====
-  { id:"get-template", cluster:"resources", subgroup:"tools", src:"web", title:"Get your own copy of this template", short:"Get the template",
+  // ===== More tools =====
+  { id:"get-template", cluster:"tools", src:"web", title:"Get your own copy of this template", short:"Get the template",
     sub:"GitHub · one folder, three files", href:CONFIG.templateRepo, linkLabel:"Get the template on GitHub &rarr;",
     rel:"If you opened this map from a folder on your own computer, you already have it, and this dot is not for you. It is here for the other case: someone sent you a map they made, you liked it, and you want the thing that made it. One download, three files (this template, the instructions your assistant reads, and a README), and every map you build starts from your own copy." },
-  { id:"cls", cluster:"resources", subgroup:"read", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
+  { id:"cls", cluster:"read", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
     sub:"Megan Ducote · two open-access papers",
     links:[
       {label:"Read the Dual-Ledger paper &rarr;", href:"https://doi.org/10.6084/m9.figshare.32576631"},
@@ -322,12 +321,12 @@ var NODES = [
       {label:"Visit Houston Bloom &rarr;", href:"https://github.com/HoustonBloom/houstonbloom"}
     ],
     rel:"The idea this template is a small piece of: cultivate your own local data, become legible to yourself first, then share with your community on your own terms. The spec describes how neighbors and groups recognize each other without a platform in the middle. Two published papers carry it, and Houston Bloom is the field program building it in practice." },
-  { id:"compass", cluster:"resources", subgroup:"tools", src:"web", title:"Critical Compass, from the Compass Suite", short:"Critical Compass",
+  { id:"compass", cluster:"tools", src:"web", title:"Critical Compass, from the Compass Suite", short:"Critical Compass",
     sub:"Compass Suite · Jonathan Kyle Hobson · free, open beta",
     href:"https://jonathankhobson.github.io/compass-suite/", linkLabel:"Explore the Compass tools &rarr;",
     note:"Code AGPL-3.0; docs, prompts, and skills CC BY-SA 4.0.",
     rel:"A critical-thinking assistant that pressure-tests claims before they travel: evidence gaps, hidden assumptions, framing risks, missing voices. Once your maps start making claims about your own data, this is the tool to run them past." },
-  { id:"cibc", cluster:"resources", subgroup:"tools", src:"web", title:"Citizen Infrastructure Builders Club", short:"CIBC",
+  { id:"cibc", cluster:"tools", src:"web", title:"Citizen Infrastructure Builders Club", short:"CIBC",
     sub:"Citizen-Infra on GitHub · open source",
     href:"https://github.com/Citizen-Infra", linkLabel:"See what the club builds &rarr;",
     rel:"Citizen infrastructure is what a community owns rather than rents: scheduling, deliberation, neighborhood dashboards, the connective tools neighbors run for themselves. The club builds them together, for and with communities, starting from what people need instead of a product roadmap. More than a dozen public projects at last count, all free to copy and adapt: in the club's own words, tools that teach collective action through use." }
@@ -511,7 +510,7 @@ function focusSetNow(){ var f=activeFocus(); return f? new Set([f].concat(Array.
 function settleNow(){ if(raf){ cancelAnimationFrame(raf); raf=null; } var fs=focusSetNow(); NODES.forEach(function(d){ var a=anim.get(d.id), t=targetsFor(d,fs); a.scale=t.scale; a.alpha=t.alpha; }); draw(); }
 function tick(t){ clearTimeout(fallbackT); var k=clamp((t-lastT)/16.7,0,3); lastT=t; var fs=focusSetNow(); var moving=false; NODES.forEach(function(d){ var a=anim.get(d.id), tt=targetsFor(d,fs); a.scale=lerp(a.scale,tt.scale,0.24*k); a.alpha=lerp(a.alpha,tt.alpha,0.24*k); if(Math.abs(a.scale-tt.scale)>0.002||Math.abs(a.alpha-tt.alpha)>0.004) moving=true; }); draw(); raf = moving?requestAnimationFrame(tick):null; }
 
-function shapePts(shape,x,y,r){ var pts=[],i,a; if(shape==="square"){ var q=r*0.68; return [[x-q,y-q],[x+q,y-q],[x+q,y+q],[x-q,y+q]]; } if(shape==="triangle"){ for(i=0;i<3;i++){ a=-Math.PI/2+i*2*Math.PI/3; pts.push([x+r*0.95*Math.cos(a),y+r*0.95*Math.sin(a)]); } return pts; } if(shape==="diamond"){ return [[x,y-r*0.95],[x+r*0.95,y],[x,y+r*0.95],[x-r*0.95,y]]; } if(shape==="star"){ for(i=0;i<10;i++){ a=-Math.PI/2+i*Math.PI/5; var rr=(i%2===0)?r*1.05:r*0.48; pts.push([x+rr*Math.cos(a),y+rr*Math.sin(a)]); } return pts; } if(shape==="hexagon"){ for(i=0;i<6;i++){ a=-Math.PI/2+i*Math.PI/3; pts.push([x+r*0.85*Math.cos(a),y+r*0.85*Math.sin(a)]); } return pts; } return null; }
+function shapePts(shape,x,y,r){ var pts=[],i,a; if(shape==="square"){ var q=r*0.68; return [[x-q,y-q],[x+q,y-q],[x+q,y+q],[x-q,y+q]]; } if(shape==="triangle"){ for(i=0;i<3;i++){ a=-Math.PI/2+i*2*Math.PI/3; pts.push([x+r*0.95*Math.cos(a),y+r*0.95*Math.sin(a)]); } return pts; } if(shape==="diamond"){ return [[x,y-r*0.95],[x+r*0.95,y],[x,y+r*0.95],[x-r*0.95,y]]; } if(shape==="star"){ for(i=0;i<10;i++){ a=-Math.PI/2+i*Math.PI/5; var rr=(i%2===0)?r*1.05:r*0.48; pts.push([x+rr*Math.cos(a),y+rr*Math.sin(a)]); } return pts; } if(shape==="hexagon"){ for(i=0;i<6;i++){ a=-Math.PI/2+i*Math.PI/3; pts.push([x+r*0.85*Math.cos(a),y+r*0.85*Math.sin(a)]); } return pts; } if(shape==="pentagon"){ for(i=0;i<5;i++){ a=-Math.PI/2+i*2*Math.PI/5; pts.push([x+r*0.95*Math.cos(a),y+r*0.95*Math.sin(a)]); } return pts; } return null; }
 function traceShape(shape,x,y,r){ ctx.beginPath(); var pts=shapePts(shape,x,y,r); if(!pts){ ctx.arc(x,y,r,0,Math.PI*2); return; } ctx.moveTo(pts[0][0],pts[0][1]); for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]); ctx.closePath(); }
 function clusterShape(c){ return (CLUSTERS[c]&&CLUSTERS[c].shape)||"circle"; }
 function shapeSVG(shape,color){ if(!shape||shape==="circle") return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="'+color+'"/></svg>'; var pts=shapePts(shape,10,10,7.5).map(function(pt){return pt[0].toFixed(1)+","+pt[1].toFixed(1);}).join(" "); return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><polygon points="'+pts+'" fill="'+color+'" stroke="'+color+'" stroke-width="3.5" stroke-linejoin="round"/></svg>'; }
