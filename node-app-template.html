@@ -23,7 +23,7 @@
   h1{ font-size:32px; line-height:1.1; margin:0; font-weight:700; letter-spacing:-.01em; text-wrap:balance }
   .sub{ margin:var(--s2) auto 0; color:var(--ink-soft); font-size:15.5px; line-height:1.5; max-width:60ch }
 
-  .filters{ margin:var(--s4) 0 var(--s3); display:flex; flex-direction:column; gap:var(--s2) }
+  .filters{ margin:var(--s4) 0 var(--s4); display:flex; flex-direction:column; gap:var(--s3) }
   .filter-row{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap }
   .frow-label{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:10.5px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--ink-faint); font-weight:700; min-width:52px }
@@ -372,16 +372,16 @@ var ANCHOR = NODES.filter(function(n){ return n.cluster==="anchor"; })[0];
   ORDER.forEach(function(clr, ci){
     var group = NODES.filter(function(n){ return n.cluster===clr; });
     var centerDeg = -90 + ci*sector;
-    var spreadDeg = Math.min(sector*0.75, 60);
+    var spreadDeg = Math.min(sector*0.88, 70);   // fill the sector rather than huddle in its middle
     var N = group.length;
     group.forEach(function(n, j){
       n.li = j;
       var t = N>1 ? (j/(N-1) - 0.5) : 0;
-      // Four or more on one arc puts four labels at the same height, and they stack straight
-      // down the canvas. Alternating rings from 4 up fans them apart before the label placer
-      // has to work at all.
-      var ring = (N>3) ? (j%2) : 0;
-      var r = 0.27 + ring*0.13;
+      // Alternating rings breaks a numbered sequence: 1 and 3 near, 2 and 4 far reads as scatter
+      // rather than order. Only stagger once a group is too big for one arc to hold, and stagger
+      // gently. The label placer handles same-height labels on its own.
+      var ring = (N>5) ? (j%2) : 0;
+      var r = 0.27 + ring*0.10;
       var deg = centerDeg + t*spreadDeg;
       var rad = deg*Math.PI/180;
       n.x = cx + r*Math.cos(rad);
