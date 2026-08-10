@@ -8,23 +8,23 @@
   :root{
     --paper:#f6f1e6; --paper-deep:#efe7d3; --map:#f4efe4; --ink:#1c1813; --ink-soft:#524b40;
     --ink-faint:#6e6659; --rule:#d6cdb8; --accent:#3c5a3a; --accent-deep:#2f4a2e;
+    /* one spacing scale, so vertical rhythm is chosen rather than improvised */
+    --s1:8px; --s2:12px; --s3:16px; --s4:24px; --s5:32px; --s6:48px;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{ background:var(--paper); color:var(--ink); font-family:Georgia,'Times New Roman',serif; line-height:1.55; }
   .ui{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif }
   .shell{ max-width:1180px; margin:0 auto; padding:22px 18px 40px }
-  header.top{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px;
-    border-bottom:2px solid var(--ink); padding-bottom:16px }
-  .masthead .kicker{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px;
-    letter-spacing:.13em; text-transform:uppercase; color:var(--accent); font-weight:700; margin:0 0 6px }
-  h1{ font-size:27px; line-height:1.15; margin:0 0 6px; font-weight:700 }
-  .sub{ margin:0; color:var(--ink-soft); font-size:15px; max-width:56ch }
+  header.top{ display:block; border-bottom:2px solid var(--ink); padding:var(--s5) 0 var(--s4) }
   .masthead{ text-align:center }
-  .masthead .sub{ margin-left:auto; margin-right:auto }
+  .masthead .kicker{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:12px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:700; margin:0 0 var(--s2) }
+  h1{ font-size:32px; line-height:1.1; margin:0; font-weight:700; letter-spacing:-.01em; text-wrap:balance }
+  .sub{ margin:var(--s2) auto 0; color:var(--ink-soft); font-size:15.5px; line-height:1.5; max-width:60ch }
 
-  .filters{ margin:16px 0 14px; display:flex; flex-direction:column; gap:9px }
-  .filter-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+  .filters{ margin:var(--s4) 0 var(--s3); display:flex; flex-direction:column; gap:var(--s2) }
+  .filter-row{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap }
   .frow-label{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:10.5px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--ink-faint); font-weight:700; min-width:52px }
   nav.chips{ display:flex; flex-wrap:wrap; gap:8px }
@@ -36,6 +36,16 @@
   .glyph{ flex:0 0 11px; display:inline-block }
   .chip small{ opacity:.7; font-weight:700 }
   .legend-note{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; color:var(--ink-faint) }
+  .legend-key{ display:flex; flex-wrap:wrap; align-items:center; gap:7px var(--s4) }
+  .legend-key .li{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11.5px; color:var(--ink-faint) }
+  /* the swatch is the dot as the map draws it: a filled centre, plus the ring for that source */
+  .legend-key .sw{ position:relative; width:15px; height:15px; flex:0 0 15px; border-radius:50%; display:inline-block }
+  .legend-key .sw::after{ content:""; position:absolute; left:50%; top:50%; width:7px; height:7px;
+    margin:-3.5px 0 0 -3.5px; border-radius:50%; background:var(--ink-soft) }
+  .legend-key .sw.ring{ border:1.6px solid var(--ink-soft) }
+  .legend-key .sw.ring.dashed{ border-style:dashed }
+  .legend-key .sw.ring.dotted{ border-style:dotted }
   .p-src-badge{ display:inline-block; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; font-size:11px; font-weight:700;
     letter-spacing:.04em; padding:3px 9px; border-radius:999px; margin:10px 0 0; background:var(--paper); color:var(--ink-soft);
     border:1px solid var(--rule) }
@@ -108,9 +118,13 @@
       <span class="frow-label">Filter</span>
       <nav class="chips" id="chips" aria-label="Filter by group"></nav>
     </div>
+    <div class="filter-row" id="subRow" style="display:none">
+      <span class="frow-label">Within</span>
+      <nav class="chips" id="subChips" aria-label="Filter within this group"></nav>
+    </div>
     <div class="filter-row" id="srcRow" style="display:none">
       <span class="frow-label">Source</span>
-      <span class="legend-note" id="srcLegend"></span>
+      <span class="legend-key" id="srcLegend"></span>
     </div>
   </div>
 
@@ -164,7 +178,11 @@ var CLUSTERS = {
   setup:    { label:"Start here",                color:"#3f8f5e", shape:"circle" },
   firstmap: { label:"Best practices",            color:"#c8902f", shape:"triangle" },
   ideas:    { label:"Examples to try",           color:"#8a5aa8", shape:"diamond" },
-  resources:{ label:"Additional resources",      color:"#9a3b52", shape:"star" }
+  // A group may carry `subs`. When it is the active filter, its sub-groups appear as a second
+  // chip row, so a long tail stays browsable instead of becoming a wall of identical dots.
+  resources:{ label:"Additional resources",      color:"#9a3b52", shape:"star",
+    subs:{ connect:{label:"Apps to connect"}, next:{label:"Next steps"},
+           read:{label:"Worth reading"},      tools:{label:"More tools"} } }
 };
 // Draw order of the sectors around the hub. List every cluster key except anchor.
 var ORDER = ["setup","firstmap","ideas","resources"];
@@ -182,7 +200,7 @@ var SOURCES = {
   web:      { label:"Around the web", ring:"dotted" }
 };
 // One short line explaining the ring styles, shown next to the source chips.
-var SOURCE_LEGEND = "plain dot = in this folder · solid ring = official docs · dotted ring = around the web";
+var SOURCE_LEGEND = "";   // optional extra note after the swatches; the swatches already show the rings
 
 // Nodes. Exactly one node must have cluster:"anchor". Fields:
 //   id       unique short string
@@ -223,16 +241,16 @@ var NODES = [
     rel:"Everything before this was setup. Now you say what you want to see, and your assistant reads your connected app and writes a copy of this template with your own material in it. The four dots this one connects to are worked examples: a map of your own work, your collaborators, a research folder, what your community is saving. Each carries a full prompt with brackets marking what to change. Open whichever is closest to what you want, copy the prompt, edit the brackets. That is the whole job." },
 
   // ===== Additional resources · what you can connect =====
-  { id:"directory", cluster:"resources", src:"official", title:"Browse the connectors directory", short:"App directory",
+  { id:"directory", cluster:"resources", subgroup:"connect", src:"official", title:"Browse the connectors directory", short:"App directory",
     sub:"claude.com/connectors · chatgpt.com/apps", href:"https://claude.com/connectors", linkLabel:"Browse Claude's gallery &rarr;",
     links:[{label:"Browse ChatGPT's apps &rarr;", href:"https://chatgpt.com/apps"}],
     rel:"A large and growing set, browsable by what you want to do. If you use an app for work or life, look for it here: project boards, notes, mail, music. Claude and ChatGPT each keep their own gallery." },
-  { id:"gworkspace", cluster:"resources", src:"official", title:"Gmail, Google Drive, and Calendar", short:"Google apps",
+  { id:"gworkspace", cluster:"resources", subgroup:"connect", src:"official", title:"Gmail, Google Drive, and Calendar", short:"Google apps",
     sub:"Official help centers · step by step", href:"https://support.claude.com/en/articles/10166901-use-google-workspace-connectors", linkLabel:"Steps for Claude &rarr;",
     links:[{label:"Steps for ChatGPT &rarr;", href:"https://help.openai.com/en/articles/10408842-google-app-for-chatgpt-data-controls-faq"}],
     note:"Claude's Google connectors work on the free plan. ChatGPT's ship on paid plans.",
     rel:"The most common starting point. Each guide walks through connecting Gmail, Drive, and Calendar, and says plainly what your assistant can and cannot see once you do." },
-  { id:"custom", cluster:"resources", src:"official", title:"Custom connectors, when you outgrow the directory", short:"Custom connectors",
+  { id:"custom", cluster:"resources", subgroup:"connect", src:"official", title:"Custom connectors, when you outgrow the directory", short:"Custom connectors",
     sub:"Official help centers · power users", href:"https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp", linkLabel:"The how-to for Claude &rarr;",
     links:[{label:"The how-to for ChatGPT &rarr;", href:"https://help.openai.com/en/articles/12584461-developer-mode-and-mcp-apps-in-chatgpt"}],
     note:"In ChatGPT this lives behind developer mode on paid plans. Claude's free plan allows one custom connector.",
@@ -270,33 +288,33 @@ var NODES = [
     rel:"Bookmarks are a quiet signal: what the people around you find worth keeping. Point this at a shared tag or feed and the community's reading becomes a picture you can talk about together." },
 
   // ===== Additional resources · going deeper =====
-  { id:"restyle", cluster:"resources", src:"folder", title:"Make the map look like you", short:"Restyle it",
+  { id:"restyle", cluster:"resources", subgroup:"next", src:"folder", title:"Make the map look like you", short:"Restyle it",
     sub:"Colors, shapes, labels, title: all editable",
     prompt:"Open [my map file] and restyle it: change the group colors to [my palette], pick different shapes if any two read too alike, and rewrite the title and subtitle in my words. Edit that map file in place. Leave node-app-template.html untouched. This prompt is one specific recipe: name any look you want.",
     rel:"Every color, shape, group label, and title lives in a marked content section your assistant can edit. Ask for your palette and your words. The engine keeps working underneath." },
-  { id:"refresh", cluster:"resources", src:"folder", title:"Maps go stale. Make refresh a routine", short:"Refresh routine",
+  { id:"refresh", cluster:"resources", subgroup:"next", src:"folder", title:"Maps go stale. Make refresh a routine", short:"Refresh routine",
     sub:"Same source, same question, on a schedule",
     href:"https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-claude-cowork", linkLabel:"Schedules in Claude &rarr;",
     links:[{label:"Tasks in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/10291617-tasks-in-chatgpt"}],
     note:"Schedules sit on paid plans in both. A routine that edits a file on your computer needs the desktop kind of scheduled task, not the cloud kind.",
     prompt:"Open [my map file] and refresh it from [the same app]: add what is new, drop what no longer belongs, and note in the subtitle when it was last refreshed. Edit that map file in place. Leave node-app-template.html untouched. If you can schedule tasks on this computer, set this refresh to repeat every [two weeks]. This prompt is one specific recipe: change what counts as stale to fit.",
     rel:"A map is a snapshot: true the day it is built, going stale the moment life moves. The fix is a routine. Both assistants can run one on a schedule (Claude calls them scheduled tasks, ChatGPT calls them tasks), so the refresh happens without you remembering it. The collaborator map is the one that earns a standing slot." },
-  { id:"share", cluster:"resources", src:"folder", title:"Share a map you made", short:"Share a map",
+  { id:"share", cluster:"resources", subgroup:"next", src:"folder", title:"Share a map you made", short:"Share a map",
     sub:"One file · email it, Drive it, send it",
     rel:"A map is one file, so sharing is just sending it. Before you do, tap through the panels once and read them as the recipient will: every name, link, and note travels with the file." },
-  { id:"why-maps", cluster:"resources", src:"web", title:"Why a map beats a list", short:"Why maps work",
+  { id:"why-maps", cluster:"resources", subgroup:"read", src:"web", title:"Why a map beats a list", short:"Why maps work",
     sub:"Eric J. Ma's blog · December 2020", href:"https://ericmjl.github.io/blog/2020/12/15/building-a-personal-knowledge-graph-on-obsidian/", linkLabel:"Read the essay &rarr;",
     rel:"Written about linked note-taking, but the argument is this template's argument: a graph externalizes how things relate in your head, and the surprising connections show up in the picture, not the list." },
-  { id:"privacy", cluster:"resources", src:"web", title:"Think before you click Allow", short:"Privacy first",
+  { id:"privacy", cluster:"resources", subgroup:"read", src:"web", title:"Think before you click Allow", short:"Privacy first",
     sub:"TechCrunch · July 2025", href:"https://techcrunch.com/2025/07/19/for-privacy-and-security-think-twice-before-granting-ai-access-to-your-personal-data/", linkLabel:"Read it before you connect &rarr;",
     rel:"Connecting an app can hand over years of email and contacts in one click, often more than the feature needs. Read the permission screen. This is the article to read before your first connection, not after." },
 
 
   // ===== Additional resources · the wider system =====
-  { id:"get-template", cluster:"resources", src:"web", title:"Get your own copy of this template", short:"Get the template",
+  { id:"get-template", cluster:"resources", subgroup:"tools", src:"web", title:"Get your own copy of this template", short:"Get the template",
     sub:"GitHub · one folder, three files", href:CONFIG.templateRepo, linkLabel:"Get the template on GitHub &rarr;",
     rel:"If you opened this map from a folder on your own computer, you already have it, and this dot is not for you. It is here for the other case: someone sent you a map they made, you liked it, and you want the thing that made it. One download, three files (this template, the instructions your assistant reads, and a README), and every map you build starts from your own copy." },
-  { id:"cls", cluster:"resources", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
+  { id:"cls", cluster:"resources", subgroup:"read", src:"web", title:"The Community Legibility Spec", short:"Legibility spec",
     sub:"Megan Ducote · two open-access papers",
     links:[
       {label:"Read the Dual-Ledger paper &rarr;", href:"https://doi.org/10.6084/m9.figshare.32576631"},
@@ -304,12 +322,12 @@ var NODES = [
       {label:"Visit Houston Bloom &rarr;", href:"https://github.com/HoustonBloom/houstonbloom"}
     ],
     rel:"The idea this template is a small piece of: cultivate your own local data, become legible to yourself first, then share with your community on your own terms. The spec describes how neighbors and groups recognize each other without a platform in the middle. Two published papers carry it, and Houston Bloom is the field program building it in practice." },
-  { id:"compass", cluster:"resources", src:"web", title:"Critical Compass, from the Compass Suite", short:"Critical Compass",
+  { id:"compass", cluster:"resources", subgroup:"tools", src:"web", title:"Critical Compass, from the Compass Suite", short:"Critical Compass",
     sub:"Compass Suite · Jonathan Kyle Hobson · free, open beta",
     href:"https://jonathankhobson.github.io/compass-suite/", linkLabel:"Explore the Compass tools &rarr;",
     note:"Code AGPL-3.0; docs, prompts, and skills CC BY-SA 4.0.",
     rel:"A critical-thinking assistant that pressure-tests claims before they travel: evidence gaps, hidden assumptions, framing risks, missing voices. Once your maps start making claims about your own data, this is the tool to run them past." },
-  { id:"cibc", cluster:"resources", src:"web", title:"Citizen Infrastructure Builders Club", short:"CIBC",
+  { id:"cibc", cluster:"resources", subgroup:"tools", src:"web", title:"Citizen Infrastructure Builders Club", short:"CIBC",
     sub:"Citizen-Infra on GitHub · open source",
     href:"https://github.com/Citizen-Infra", linkLabel:"See what the club builds &rarr;",
     rel:"Citizen infrastructure is what a community owns rather than rents: scheduling, deliberation, neighborhood dashboards, the connective tools neighbors run for themselves. The club builds them together, for and with communities, starting from what people need instead of a product roadmap. More than a dozen public projects at last count, all free to copy and adapt: in the club's own words, tools that teach collective action through use." }
@@ -379,12 +397,13 @@ var PAPER = "#f4efe4", VW=1000, VH=760, PAD=56;
 var canvas = document.querySelector("#map"), ctx = canvas.getContext("2d");
 var chipsEl = document.querySelector("#chips"), detailEl = document.querySelector("#detail");
 var srcRow = document.querySelector("#srcRow"), srcLegendEl = document.querySelector("#srcLegend");
+var subRow = document.querySelector("#subRow"), subChipsEl = document.querySelector("#subChips");
 var HAS_SOURCES = Object.keys(SOURCES).length > 0;
 var byId = new Map(NODES.map(function(d){ return [d.id, d]; }));
 var neighbors = new Map(NODES.map(function(d){ return [d.id, new Set()]; }));
 LINKS.forEach(function(l){ neighbors.get(l[0]).add(l[1]); neighbors.get(l[1]).add(l[0]); });
 var anim = new Map(NODES.map(function(d){ return [d.id, {scale:1, alpha:1}]; }));
-var filter="all", selectedId=null, hoverId=null, cam={s:1,x:0,y:0};
+var filter="all", subFilter="all", selectedId=null, hoverId=null, cam={s:1,x:0,y:0};
 var raf=null, lastT=0, fallbackT=null;
 var lerp=function(a,b,t){return a+(b-a)*t;}, clamp=function(v,lo,hi){return Math.min(hi,Math.max(lo,v));};
 var wpos=function(d){return [d.x*VW, d.y*VH];}, toScreen=function(wx,wy){return [cam.x+wx*cam.s, cam.y+wy*cam.s];};
@@ -419,7 +438,13 @@ var CT=function(cat){ return readable(C(cat), PANEL_BG); };
 function activeFocus(){ return hoverId || selectedId; }
 // Source is a label, not a filter. It draws as a ring on the dot, a badge in the panel, and one
 // legend line under the chips. Only groups filter, so there is one row of chips to understand.
-function matchGroup(d){ return filter==="all" || d.cluster===filter || d.cluster==="anchor"; }
+function subsFor(c){ return (CLUSTERS[c] && CLUSTERS[c].subs) || null; }
+function matchGroup(d){
+  if(filter==="all" || d.cluster==="anchor") return true;
+  if(d.cluster!==filter) return false;
+  if(subsFor(filter) && subFilter!=="all" && d.subgroup!==subFilter) return false;
+  return true;
+}
 // A focused node owns the view: its whole neighbourhood stays on screen and lit even when a
 // filter is on, so tapping a node reveals every connection it has, not just same-group ones.
 function focusNeighborhood(id){
@@ -555,8 +580,22 @@ function countGroup(c){ return NODES.filter(function(d){ return d.cluster!=="anc
 function renderChips(){ chipsEl.replaceChildren();
   chipsEl.append(chip("chip","All",null,countGroup("all"), filter==="all", function(){ filter="all"; onFilterChange(); }));
   ORDER.forEach(function(c){ chipsEl.append(chip("chip",CLUSTERS[c].label,shapeSVG(clusterShape(c),CLUSTERS[c].color),countGroup(c), filter===c, function(){ filter=c; onFilterChange(); })); }); }
+function renderSubChips(){
+  var subs=subsFor(filter);
+  if(!subs){ subRow.style.display="none"; return; }
+  subRow.style.display="";
+  var inGroup=NODES.filter(function(d){ return d.cluster===filter; });
+  subChipsEl.replaceChildren();
+  subChipsEl.append(chip("chip","All",null,inGroup.length, subFilter==="all", function(){ subFilter="all"; onSubChange(); }));
+  Object.keys(subs).forEach(function(k){
+    subChipsEl.append(chip("chip",subs[k].label,null,
+      inGroup.filter(function(d){ return d.subgroup===k; }).length, subFilter===k,
+      function(){ subFilter=k; onSubChange(); }));
+  });
+}
+function onSubChange(){ selectedId=null; hoverId=null; renderSubChips(); renderRestingPanel(); fit(false); requestRender(); }
 function onFilterChange(){
-  selectedId=null; hoverId=null; renderChips(); renderRestingPanel(); fit(atRest()); requestRender();
+  selectedId=null; hoverId=null; subFilter="all"; renderChips(); renderSubChips(); renderRestingPanel(); fit(atRest()); requestRender();
   // On a phone the chips sit above the fold and the canvas does not, so a tap would otherwise
   // change something the person cannot see.
   if(window.innerWidth<=820){ var mp=document.querySelector(".map-wrap"); if(mp) mp.scrollIntoView({behavior:"smooth",block:"start"}); }
@@ -593,6 +632,7 @@ function renderFilterOverview(){
   detailEl.innerHTML =
     '<p class="p-kicker" style="color:'+textColor+'">Filter</p>'+
     '<h2 class="p-title">'+esc(grp ? grp.label : "Filtered view")+'</h2>'+
+    ((subsFor(filter)&&subFilter!=="all"&&subsFor(filter)[subFilter]) ? '<p class="p-source">'+esc(subsFor(filter)[subFilter].label)+' only</p>' : "")+
     '<div class="p-divider"></div>'+
     '<p class="p-lead">What is in this group</p>'+
     '<p class="p-rel">'+items.length+' of '+total+' items. Tap one on the map or in the list to read why it is here.</p>'+
@@ -672,7 +712,7 @@ function copyText(text, btn){
   } else { fallback(); }
 }
 
-function jumpTo(id){ var t=byId.get(id); if(!t) return; if(!matchGroup(t)){ filter="all"; renderChips(); fit(true); } selectedId=null; select(id); }
+function jumpTo(id){ var t=byId.get(id); if(!t) return; if(!matchGroup(t)){ filter="all"; subFilter="all"; renderChips(); renderSubChips(); fit(true); } selectedId=null; select(id); }
 // The one framing rule: with a node selected the camera holds that node and everything it
 // connects to; with nothing selected it holds whatever the filters left visible. Selecting the
 // hub frames the whole map, so the hub doubles as the way back out.
@@ -703,8 +743,15 @@ document.querySelector("#zoomReset").onclick=function(){ refit(); requestRender(
 window.addEventListener("resize",function(){ resize(); refit(); requestRender(); });
 document.addEventListener("keydown",function(e){ if(e.key==="Escape" && selectedId) deselect(); });
 
-if(HAS_SOURCES){ srcRow.style.display=""; srcLegendEl.textContent=SOURCE_LEGEND; }
+if(HAS_SOURCES){
+  srcRow.style.display="";
+  srcLegendEl.innerHTML = Object.keys(SOURCES).map(function(k){
+    var ring=SOURCES[k].ring;
+    return '<span class="li"><i class="sw'+(ring?' ring '+ring:'')+'"></i>'+esc(SOURCES[k].label)+'</span>';
+  }).join("") + (SOURCE_LEGEND ? '<span class="li legend-note">'+esc(SOURCE_LEGEND)+'</span>' : "");
+}
 renderChips();
+renderSubChips();
 resize();
 fit(true);
 renderPanel(ANCHOR);

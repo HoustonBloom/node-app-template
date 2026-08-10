@@ -42,14 +42,16 @@ Keep the `anchor` entry. Replace the rest with 2 to 6 groups that answer the que
 
 **Pick colors for the dots, not for the text.** A group color is a large shape on the map, so choose what reads well there. The engine runs every text use of that color through `readable()`, which darkens it just enough to clear WCAG AA (4.5:1) on the panel background and behind button labels, and leaves it alone when it already passes. Panel text and buttons stay legible whatever palette you pick, and the dots keep the color you chose. Do not pre-darken your palette to compensate; that only dulls the map.
 
+**A group with a long tail can carry sub-groups.** Give the cluster a `subs` map (`subs:{ key:{label:"..."} }`) and every node in it a matching `subgroup:"key"`. When that group is the active filter, its sub-groups appear as a second chip row, so twelve nodes stay browsable instead of reading as a wall of identical dots. Sub-groups are optional; a group without `subs` behaves exactly as before. Do not confuse `subgroup` with `sub`, which is the node's provenance line.
+
 **Group labels name what the reader gets, not what you did.** "Start here", "Best practices", "Examples to try" tell someone where to go. "Miscellaneous", "Other", "Additional items" do not. One group may legitimately hold the long tail; the shipped map puts twelve of its twenty-three nodes in Additional resources, because splitting the tail into three thin groups made the reader choose between labels that meant nothing to them.
 
 ### SOURCES and SOURCE_LEGEND (a label, not a filter)
-When the map draws from more than one place (two apps, or an app plus the web), define `SOURCES` and give every node a `src` key. Source is labelling only: each node's panel shows a source badge, any source with a `ring` style ("solid", "dashed", or "dotted") wears that outline on its dot, and one legend line under the chips explains the rings. Nothing filters by it.
+When the map draws from more than one place (two apps, or an app plus the web), define `SOURCES` and give every node a `src` key. Source is labelling only: each node's panel shows a source badge, any source with a `ring` style ("solid", "dashed", or "dotted") wears that outline on its dot, and a visual key under the chips shows each swatch beside its name. Nothing filters by it.
 
-That is deliberate. Groups are the one thing a person filters, so there is a single row of chips to understand and the first one they reach is the one that matters. Do not add a second filter row.
+That is deliberate. Groups are what a person filters, so the first chip row they reach is the one that matters. Do not make source filterable. The only other chip row that may appear is a group's own sub-groups, and only while that group is selected.
 
-Use one ring style per source, never two sources with the same style: plain vs solid vs dotted is what a reader can tell apart at a glance. Write `SOURCE_LEGEND` as one short line (follow the shipped example's "plain dot = ... · solid ring = ..." pattern). If everything comes from one place, set `SOURCES = {}` and the source line hides itself.
+Use one ring style per source, never two sources with the same style: plain vs solid vs dotted is what a reader can tell apart at a glance. The key under the chips is drawn from `SOURCES` itself: each source appears as its actual swatch (the centre dot, wearing its ring) next to its label, so a reader matches the key to the map by sight rather than by parsing a sentence. You do not write that key. `SOURCE_LEGEND` is now an optional extra note shown after the swatches; leave it `""` unless there is something the swatches cannot show. If everything comes from one place, set `SOURCES = {}` and the source line hides itself.
 
 ### NODES
 Exactly one node keeps `cluster:"anchor"`: it is the hub, and its `rel` states the question the map answers. Every other node:
@@ -62,6 +64,7 @@ Exactly one node keeps `cluster:"anchor"`: it is the hub, and its `rel` states t
 | `title` | yes | full name, shown in the panel |
 | `short` | yes | 1 to 3 words, drawn on the map itself |
 | `sub` | no | provenance line: source app, author, or date |
+| `subgroup` | only when the cluster defines `subs` | which sub-group this node belongs to, one of that cluster's `subs` keys |
 | `rel` | yes | one or two sentences: why this item answers the map's question. Specific beats generic. |
 | `href` | no | link the panel button opens (the Drive URL, the bookmark, the mailto) |
 | `linkLabel` | no | per-node button text, e.g. `"Open in Drive &rarr;"` |
