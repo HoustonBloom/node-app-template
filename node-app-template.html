@@ -30,7 +30,6 @@
     font-size:12.5px; font-weight:600; color:var(--ink-soft); background:var(--paper-deep); border:1px solid var(--rule);
     border-radius:999px; padding:6px 12px; cursor:pointer }
   .chip[aria-pressed="true"]{ background:var(--ink); color:var(--paper); border-color:var(--ink) }
-  .chip.src[aria-pressed="true"]{ background:var(--accent-deep); border-color:var(--accent-deep); color:var(--paper) }
   .chip .dot{ width:9px; height:9px; border-radius:50% }
   .glyph{ flex:0 0 11px; display:inline-block }
   .chip small{ opacity:.7; font-weight:700 }
@@ -103,14 +102,13 @@
   </header>
 
   <div class="filters ui">
-    <div class="filter-row" id="srcRow" style="display:none">
-      <span class="frow-label">Source</span>
-      <nav class="chips" id="srcChips" aria-label="Filter by source"></nav>
-      <span class="legend-note" id="srcLegend"></span>
-    </div>
     <div class="filter-row">
       <span class="frow-label">Group</span>
       <nav class="chips" id="chips" aria-label="Filter by group"></nav>
+    </div>
+    <div class="filter-row" id="srcRow" style="display:none">
+      <span class="frow-label">Source</span>
+      <span class="legend-note" id="srcLegend"></span>
     </div>
   </div>
 
@@ -122,7 +120,7 @@
         <button id="zoomOut" type="button" aria-label="Zoom out">&minus;</button>
         <button id="zoomReset" type="button" aria-label="Reset view">&#9711;</button>
       </div>
-      <p class="hint ui" id="hint">Drag to move &middot; scroll to zoom &middot; tap a dot</p>
+      <p class="hint ui" id="hint">Drag to move &middot; scroll to zoom &middot; tap a dot &middot; tap the background to come back out</p>
     </section>
 
     <aside class="panel" id="panel">
@@ -147,7 +145,7 @@
 var CONFIG = {
   kicker:   "Node app template · start here",
   title:    "Using this template for your own work",
-  subtitle: "Every dot teaches one piece of getting set up: tap it, read the panel, follow the link. When you are ready, hand your assistant this folder and ask for a map of your own.",
+  subtitle: "Tap a dot and the map pulls back to show what it connects to, with the story in the panel. Start at the middle and follow the four numbered steps.",
   relLabel: "What to know",            // heading above each node's explanation
   linkLabel:"Open &rarr;",             // default button text when a node has a link
   // Public home of this template. The "Get the template" node's button uses it.
@@ -199,16 +197,18 @@ var SOURCE_LEGEND = "plain dot = in this folder · solid ring = official docs ·
 var NODES = [
   { id:"hub", cluster:"anchor", title:"Using this template for your own work", short:"Start here",
     sub:"Every link on this map checked July 2026",
-    href:CONFIG.templateRepo, linkLabel:"Read the guide on GitHub &rarr;",
-    rel:"You are looking at the guide. Every dot on this map teaches one piece of getting set up: the AI app to download, what you can connect, prompts worth stealing. Read what interests you, then ask your assistant for a map of your own." },
+    next:{ id:"download", label:"Start at step 1" },
+    rel:"This map is the guide, and it is also an example of what you are about to make. Get set up runs in four numbered steps and ends at four worked examples you can copy. The other groups are there when you want them: what you can connect, how the prompt works, how to restyle and refresh, and where the idea came from. Nothing here needs reading in order except those four steps." },
 
   // ===== Get set up =====
   { id:"download", cluster:"setup", src:"official", title:"Download an AI desktop app", short:"1 · Get an AI app",
+    next:{ id:"connect-app", label:"Next: connect your apps" },
     sub:"Claude or ChatGPT · your pick", href:"https://claude.com/download", linkLabel:"Download Claude &rarr;",
     links:[{label:"Download ChatGPT &rarr;", href:"https://chatgpt.com/download/"}],
     note:"Both downloads are free. In ChatGPT, the folder-and-files work happens through Codex, built into the app, nothing extra to install. Finishing a map is where plans matter: Claude needs a paid plan to write the map file (Cowork or Claude Code, Pro and up); ChatGPT needs one to connect Google apps.",
     rel:"This template runs on whichever AI assistant you already use. Step one is having that assistant on your desktop, where it can reach your files. The buttons below go to the official downloads, both free." },
   { id:"connect-app", cluster:"setup", src:"official", title:"Connect your apps", short:"2 · Connect apps",
+    next:{ id:"give-folder", label:"Next: point your assistant here" },
     sub:"Official help centers · Claude and ChatGPT", href:"https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities", linkLabel:"Connect apps in Claude &rarr;",
     links:[{label:"Connect apps in ChatGPT &rarr;", href:"https://help.openai.com/en/articles/11487775-connectors-in-chatgpt"}],
     note:"Before your first connection, read the privacy dot under Go deeper.",
@@ -220,7 +220,7 @@ var NODES = [
   { id:"populate", cluster:"setup", src:"folder", title:"Fill the template with your own material", short:"4 · Fill the template",
     next:{ id:"my-work", label:"See the worked examples" },
     sub:"Where it stops being a demo",
-    rel:"Everything before this was setup. Now you say what you want to see, and your assistant reads your connected app and writes a copy of this template with your own material in it. Four worked examples sit under Use cases to steal, each one a full prompt with brackets marking what to change. Open whichever is closest to your question, copy it, edit the brackets. If you would rather write your own from scratch, the bare prompt is under Make your first map." },
+    rel:"Everything before this was setup. Now you say what you want to see, and your assistant reads your connected app and writes a copy of this template with your own material in it. The four dots this one connects to are worked examples: a map of your own work, your collaborators, a research folder, what your community is saving. Each carries a full prompt with brackets marking what to change. Open whichever is closest to what you want, copy the prompt, edit the brackets. That is the whole job." },
 
   // ===== What you can connect =====
   { id:"directory", cluster:"connect", src:"official", title:"Browse the connectors directory", short:"App directory",
@@ -320,7 +320,9 @@ var NODES = [
 var EXTRA_LINKS = [
   ["connect-app","directory"],
   ["populate","my-work"],
-  ["populate","prompt"],
+  ["populate","collaborators"],
+  ["populate","drive-synthesis"],
+  ["populate","community-links"],
   ["question","prompt"],
   ["prompt","keep"],
   ["privacy","connect-app"],
@@ -371,20 +373,21 @@ var LINKS = NODES.filter(function(n){ return n.cluster!=="anchor"; }).map(functi
 var PAPER = "#f4efe4", VW=1000, VH=760, PAD=56;
 var canvas = document.querySelector("#map"), ctx = canvas.getContext("2d");
 var chipsEl = document.querySelector("#chips"), detailEl = document.querySelector("#detail");
-var srcChipsEl = document.querySelector("#srcChips"), srcRow = document.querySelector("#srcRow"), srcLegendEl = document.querySelector("#srcLegend");
+var srcRow = document.querySelector("#srcRow"), srcLegendEl = document.querySelector("#srcLegend");
 var HAS_SOURCES = Object.keys(SOURCES).length > 0;
 var byId = new Map(NODES.map(function(d){ return [d.id, d]; }));
 var neighbors = new Map(NODES.map(function(d){ return [d.id, new Set()]; }));
 LINKS.forEach(function(l){ neighbors.get(l[0]).add(l[1]); neighbors.get(l[1]).add(l[0]); });
 var anim = new Map(NODES.map(function(d){ return [d.id, {scale:1, alpha:1}]; }));
-var filter="all", srcFilter="all", selectedId=null, hoverId=null, cam={s:1,x:0,y:0};
+var filter="all", selectedId=null, hoverId=null, cam={s:1,x:0,y:0};
 var raf=null, lastT=0, fallbackT=null;
 var lerp=function(a,b,t){return a+(b-a)*t;}, clamp=function(v,lo,hi){return Math.min(hi,Math.max(lo,v));};
 var wpos=function(d){return [d.x*VW, d.y*VH];}, toScreen=function(wx,wy){return [cam.x+wx*cam.s, cam.y+wy*cam.s];};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});};
 var C=function(cat){ return (CLUSTERS[cat]||{color:"#8a8275"}).color; };
 function activeFocus(){ return hoverId || selectedId; }
-function matchSrc(d){ return srcFilter==="all" || d.cluster==="anchor" || d.src===srcFilter; }
+// Source is a label, not a filter. It draws as a ring on the dot, a badge in the panel, and one
+// legend line under the chips. Only groups filter, so there is one row of chips to understand.
 function matchGroup(d){ return filter==="all" || d.cluster===filter || d.cluster==="anchor"; }
 // A focused node owns the view: its whole neighbourhood stays on screen and lit even when a
 // filter is on, so tapping a node reveals every connection it has, not just same-group ones.
@@ -393,12 +396,12 @@ function focusNeighborhood(id){
   return new Set([fid].concat(Array.from(neighbors.get(fid)||[])));
 }
 function visible(){
-  var base = NODES.filter(function(d){ return matchSrc(d) && matchGroup(d); });
+  var base = NODES.filter(matchGroup);
   var nb = focusNeighborhood(); if(!nb) return base;
   var seen={}; base.forEach(function(d){ seen[d.id]=1; });
   return base.concat(NODES.filter(function(d){ return !seen[d.id] && nb.has(d.id); }));
 }
-function atRest(){ return filter==="all" && srcFilter==="all"; }
+function atRest(){ return filter==="all"; }
 function baseR(d){ return d.cluster==="anchor" ? 28 : 13; }
 function nodeR(d){ return baseR(d)*clamp(cam.s,0.3,1.4)*anim.get(d.id).scale; }
 
@@ -440,7 +443,6 @@ function shapePts(shape,x,y,r){ var pts=[],i,a; if(shape==="square"){ var q=r*0.
 function traceShape(shape,x,y,r){ ctx.beginPath(); var pts=shapePts(shape,x,y,r); if(!pts){ ctx.arc(x,y,r,0,Math.PI*2); return; } ctx.moveTo(pts[0][0],pts[0][1]); for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]); ctx.closePath(); }
 function clusterShape(c){ return (CLUSTERS[c]&&CLUSTERS[c].shape)||"circle"; }
 function shapeSVG(shape,color){ if(!shape||shape==="circle") return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="'+color+'"/></svg>'; var pts=shapePts(shape,10,10,7.5).map(function(pt){return pt[0].toFixed(1)+","+pt[1].toFixed(1);}).join(" "); return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><polygon points="'+pts+'" fill="'+color+'" stroke="'+color+'" stroke-width="3.5" stroke-linejoin="round"/></svg>'; }
-function ringGlyph(ring){ if(!ring) return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4.5" fill="#524b40"/></svg>'; var dash={solid:"",dashed:"5,3",dotted:"2,3"}[ring]||""; return '<svg class="glyph" width="11" height="11" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="#524b40" stroke-width="2.2"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/></svg>'; }
 function prio(d,focus){ if(d.cluster==="anchor") return 0; if(d.id===focus) return 1; if(focus&&neighbors.get(focus)&&neighbors.get(focus).has(d.id)) return 2; return 3; }
 function draw(){
   var rect=canvas.getBoundingClientRect(); ctx.clearRect(0,0,rect.width,rect.height);
@@ -462,16 +464,12 @@ function drawNode(d){ var a=anim.get(d.id); var sp=toScreen.apply(null,wpos(d));
 function nodeAt(px,py){ var vis=visible(); for(var i=vis.length-1;i>=0;i--){ var d=vis[i]; var sp=toScreen.apply(null,wpos(d)); if(Math.hypot(sp[0]-px,sp[1]-py)<=nodeR(d)+6) return d; } return null; }
 
 function chip(cls,label,glyph,count,pressed,onClick){ var b=document.createElement("button"); b.type="button"; b.className=cls; b.setAttribute("aria-pressed",String(pressed)); b.innerHTML=(glyph||"")+"<span>"+esc(label)+"</span><small>"+count+"</small>"; b.onclick=onClick; return b; }
-// group chip counts respect the active source filter, so the two filter rows read as one system
-function countGroup(c){ return NODES.filter(function(d){ return d.cluster!=="anchor" && (c==="all"||d.cluster===c) && (srcFilter==="all"||d.src===srcFilter); }).length; }
-function renderSrcChips(){ if(!HAS_SOURCES) return; srcChipsEl.replaceChildren();
-  srcChipsEl.append(chip("chip src","All sources",null,NODES.filter(function(d){return d.cluster!=="anchor";}).length, srcFilter==="all", function(){ srcFilter="all"; onFilterChange(); }));
-  Object.keys(SOURCES).forEach(function(s){ srcChipsEl.append(chip("chip src",SOURCES[s].label,ringGlyph(SOURCES[s].ring),NODES.filter(function(d){return d.src===s;}).length, srcFilter===s, function(){ srcFilter=s; onFilterChange(); })); }); }
+function countGroup(c){ return NODES.filter(function(d){ return d.cluster!=="anchor" && (c==="all"||d.cluster===c); }).length; }
 function renderChips(){ chipsEl.replaceChildren();
   chipsEl.append(chip("chip","All",null,countGroup("all"), filter==="all", function(){ filter="all"; onFilterChange(); }));
   ORDER.forEach(function(c){ chipsEl.append(chip("chip",CLUSTERS[c].label,shapeSVG(clusterShape(c),CLUSTERS[c].color),countGroup(c), filter===c, function(){ filter=c; onFilterChange(); })); }); }
 function onFilterChange(){
-  selectedId=null; hoverId=null; renderSrcChips(); renderChips(); renderRestingPanel(); fit(atRest()); requestRender();
+  selectedId=null; hoverId=null; renderChips(); renderRestingPanel(); fit(atRest()); requestRender();
   // On a phone the chips sit above the fold and the canvas does not, so a tap would otherwise
   // change something the person cannot see.
   if(window.innerWidth<=820){ var mp=document.querySelector(".map-wrap"); if(mp) mp.scrollIntoView({behavior:"smooth",block:"start"}); }
@@ -485,6 +483,10 @@ function linkedTo(d){
 }
 function relatedList(head, items, withGroup){
   if(!items.length) return "";
+  // The group tag earns its place only when the list spans more than one group. On a list that
+  // is all one group it is the same words repeated down the column.
+  var spans={}; items.forEach(function(s){ spans[s.cluster]=1; });
+  withGroup = withGroup && Object.keys(spans).length>1;
   return '<div class="p-related"><p class="rh">'+head+' ('+items.length+')</p><ul>'+items.map(function(s){
     return '<li data-id="'+s.id+'">'+shapeSVG(clusterShape(s.cluster),C(s.cluster))+esc(s.short||s.title)+
       ((withGroup&&CLUSTERS[s.cluster])?'<small class="rgrp">'+esc(CLUSTERS[s.cluster].label)+'</small>':"")+'</li>';
@@ -496,23 +498,21 @@ function renderRestingPanel(){ if(atRest()) renderPanel(ANCHOR); else renderFilt
 // With a filter on and nothing selected, the panel says what the filter holds and lists it,
 // rather than repeating the hub. Built from the content section, so it needs no written copy.
 function renderFilterOverview(){
-  var items = NODES.filter(function(d){ return d.cluster!=="anchor" && matchSrc(d) && matchGroup(d); });
+  var items = NODES.filter(function(d){ return d.cluster!=="anchor" && matchGroup(d); });
   var total = NODES.filter(function(d){ return d.cluster!=="anchor"; }).length;
-  var grp = (filter!=="all" && CLUSTERS[filter]) ? CLUSTERS[filter] : null;
-  var src = (HAS_SOURCES && srcFilter!=="all" && SOURCES[srcFilter]) ? SOURCES[srcFilter] : null;
+  var grp = CLUSTERS[filter] || null;
   var color = grp ? grp.color : "#8a8275";
   detailEl.innerHTML =
-    '<p class="p-kicker" style="color:'+color+'">Filter</p>'+
-    '<h2 class="p-title">'+esc(grp ? grp.label : (src ? src.label : "Filtered view"))+'</h2>'+
-    ((grp&&src) ? '<p class="p-source">'+esc(src.label)+' only</p>' : "")+
+    '<p class="p-kicker" style="color:'+color+'">Group</p>'+
+    '<h2 class="p-title">'+esc(grp ? grp.label : "Filtered view")+'</h2>'+
     '<div class="p-divider"></div>'+
-    '<p class="p-lead">What is in this filter</p>'+
+    '<p class="p-lead">What is in this group</p>'+
     '<p class="p-rel">'+items.length+' of '+total+' items. Tap one on the map or in the list to read why it is here.</p>'+
-    relatedList(grp?"In this group":"In this filter", items, !grp)+
+    relatedList("In this group", items, false)+
     '<button type="button" class="p-btn ghost p-clear">Show the whole map</button>';
   bindPanelList();
   var clr=detailEl.querySelector(".p-clear");
-  if(clr) clr.onclick=function(){ filter="all"; srcFilter="all"; onFilterChange(); };
+  if(clr) clr.onclick=function(){ filter="all"; onFilterChange(); };
   var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0;
 }
 
@@ -527,8 +527,11 @@ function renderPanel(d){
       '<div class="p-divider"></div>'+
       '<p class="p-lead">What this map is</p>'+
       '<p class="p-rel">'+esc(d.rel)+'</p>'+
-      (d.href ? '<a class="p-btn" style="background:'+color+'" href="'+esc(d.href)+'" target="_blank" rel="noopener">'+(d.linkLabel||CONFIG.linkLabel)+'</a>' : '')+
+      ((d.next && byId.get(d.next.id)) ? '<button type="button" class="p-btn p-next" style="background:'+color+'">'+esc(d.next.label||"Next")+' &rarr;</button>' : "")+
+      (d.href ? '<a class="p-btn'+(d.next?' ghost':'')+'"'+(d.next?'':' style="background:'+color+'"')+' href="'+esc(d.href)+'" target="_blank" rel="noopener">'+(d.linkLabel||CONFIG.linkLabel)+'</a>' : '')+
       '<p class="p-note">'+NODES.filter(function(n){return n.cluster!=="anchor";}).length+' items in '+ORDER.length+' groups. Tap a dot to read why it is here.</p>';
+    var hubNext = detailEl.querySelector(".p-next");
+    if(hubNext) hubNext.onclick = function(){ jumpTo(d.next.id); };
     var pn=document.querySelector("#panel"); if(pn) pn.scrollTop=0; return;
   }
   var sibs = NODES.filter(function(n){ return n.cluster===d.cluster && n.id!==d.id; });
@@ -579,7 +582,7 @@ function copyText(text, btn){
   } else { fallback(); }
 }
 
-function jumpTo(id){ var t=byId.get(id); if(!t) return; if(!(matchSrc(t)&&matchGroup(t))){ filter="all"; srcFilter="all"; renderSrcChips(); renderChips(); fit(true); } selectedId=null; select(id); }
+function jumpTo(id){ var t=byId.get(id); if(!t) return; if(!matchGroup(t)){ filter="all"; renderChips(); fit(true); } selectedId=null; select(id); }
 // The one framing rule: with a node selected the camera holds that node and everything it
 // connects to; with nothing selected it holds whatever the filters left visible. Selecting the
 // hub frames the whole map, so the hub doubles as the way back out.
@@ -610,7 +613,7 @@ document.querySelector("#zoomReset").onclick=function(){ refit(); requestRender(
 window.addEventListener("resize",function(){ resize(); refit(); requestRender(); });
 document.addEventListener("keydown",function(e){ if(e.key==="Escape" && selectedId) deselect(); });
 
-if(HAS_SOURCES){ srcRow.style.display=""; srcLegendEl.textContent=SOURCE_LEGEND; renderSrcChips(); }
+if(HAS_SOURCES){ srcRow.style.display=""; srcLegendEl.textContent=SOURCE_LEGEND; }
 renderChips();
 resize();
 fit(true);

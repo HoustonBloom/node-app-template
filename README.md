@@ -8,7 +8,7 @@ The map itself is one HTML file: no coding, nothing to install, no account. The 
 
 ## Open the template first
 
-Double-click `node-app-template.html`. What opens is the guide: a starter map whose dots teach you how to use the template itself. Where to download the app, what you can connect, prompts worth copying, articles worth reading, all with links to real sources. Drag to move, scroll to zoom, tap a dot, try the filter buttons.
+Double-click `node-app-template.html`. What opens is the guide: a starter map whose dots teach you how to use the template itself. Where to download the app, what you can connect, prompts worth copying, articles worth reading, all with links to real sources. Drag to move, scroll to zoom, tap a dot, tap the background to come back out. The quickest way through it is the button in the middle panel: it starts you at step 1 and every step hands you to the next, ending at four examples you can copy.
 
 This starter map never goes away. When your assistant builds your maps, it copies the template and fills in the copy. The original stays in the folder as your permanent reference.
 

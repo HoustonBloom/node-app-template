@@ -40,8 +40,12 @@ var CONFIG = {
 ### CLUSTERS and ORDER
 Keep the `anchor` entry. Replace the rest with 2 to 6 groups that answer the question, each with a label, a distinct color, AND a distinct `shape` (circle, square, triangle, diamond, hexagon, star). The shape draws on the map and in the filter chips, so a color-blind reader can still tell groups apart. List every non-anchor key in `ORDER`; that sets the sectors around the hub.
 
-### SOURCES and SOURCE_LEGEND (optional second filter)
-When the map draws from more than one place (two apps, or an app plus the web), define `SOURCES` and give every node a `src` key. The person gets a second chip row to filter by source, each node's panel shows a source badge, and any source with a `ring` style ("solid", "dashed", or "dotted") wears that outline on the map; a source with no ring is a plain dot. Use one ring style per source, never two sources with the same style: plain vs solid vs dotted is what a reader can tell apart at a glance. Write `SOURCE_LEGEND` as one short line explaining the rings (follow the shipped example's "plain dot = ... · solid ring = ..." pattern). If everything comes from one place, set `SOURCES = {}` and the source row hides itself.
+### SOURCES and SOURCE_LEGEND (a label, not a filter)
+When the map draws from more than one place (two apps, or an app plus the web), define `SOURCES` and give every node a `src` key. Source is labelling only: each node's panel shows a source badge, any source with a `ring` style ("solid", "dashed", or "dotted") wears that outline on its dot, and one legend line under the chips explains the rings. Nothing filters by it.
+
+That is deliberate. Groups are the one thing a person filters, so there is a single row of chips to understand and the first one they reach is the one that matters. Do not add a second filter row.
+
+Use one ring style per source, never two sources with the same style: plain vs solid vs dotted is what a reader can tell apart at a glance. Write `SOURCE_LEGEND` as one short line (follow the shipped example's "plain dot = ... · solid ring = ..." pattern). If everything comes from one place, set `SOURCES = {}` and the source line hides itself.
 
 ### NODES
 Exactly one node keeps `cluster:"anchor"`: it is the hub, and its `rel` states the question the map answers. Every other node:
@@ -60,7 +64,7 @@ Exactly one node keeps `cluster:"anchor"`: it is the hub, and its `rel` states t
 | `links` | no | extra links as `[{label, href}, ...]`; rendered as secondary buttons after the main one |
 | `prompt` | no | copy-able prompt text; renders as a block with a working Copy button. Use for nodes that teach prompting. Write prompts as editable examples: brackets for the fill-ins, and a closing line telling the person the recipe is theirs to change. Any prompt that builds a map must end by instructing the agent to save a new file and leave node-app-template.html untouched |
 | `note` | no | small print at the panel bottom |
-| `next` | no | `{id, label}` renders a "Next: ..." button that jumps to another node, clearing filters if needed. Use to chain a guided sequence |
+| `next` | no | `{id, label}` renders a button that jumps to another node, clearing the filter if needed. The hub can carry one too, and should: it is the panel every reader lands on, so give it a `next` into the first step rather than leaving them to find it. Chain every step of a numbered sequence to the one after it, and point the last step at whatever the reader is meant to do with all of it. A step with no `next` is where the guided path stops |
 
 Layout is computed automatically from `cluster` membership. Do not add `x`/`y`.
 
